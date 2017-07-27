@@ -1,0 +1,7 @@
+<launch>
+
+      <node pkg="pxpincher_lib" type="visionPickAndPlace" name="get_disparity_send_chatter" output="screen">
+
+
+</launch>
+
