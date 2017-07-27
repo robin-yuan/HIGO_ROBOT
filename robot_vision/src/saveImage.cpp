@@ -176,8 +176,8 @@ int main(int argc, char **argv)
 
   cv::startWindowThread();
   image_transport::ImageTransport it(nh);
-  image_transport::Subscriber sub = it.subscribe("/camera/rgb/image_raw", 1, imageCallback);
-  image_transport::Subscriber sub1 = it.subscribe("/camera/image/image_raw/left", 1, imageCallback1);
+  image_transport::Subscriber sub =  it.subscribe("/camera/image/image_raw/left", 1, imageCallback);
+  image_transport::Subscriber sub1 = it.subscribe("/camera/image/image_raw/right", 1, imageCallback1);
 
 
   while (nh.ok()) 
