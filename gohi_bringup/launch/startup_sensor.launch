@@ -13,11 +13,18 @@
     <include file="$(find rbx1_vision)/launch/usb_cam_left.launch"      />
     <include file="$(find rbx1_vision)/launch/usb_cam_right.launch"      />
     <include file="$(find rbx1_vision)/launch/camshift1.launch"      />
-    <include file="$(find rbx1_dynamixels)/launch/dynamixels.launch"      />
+
+
+    <include file="$(find rbx1_dynamixels)/launch/dynamixels.launch"        />
     <include file="$(find rbx1_dynamixels)/launch/head_tracker.launch"      />
+    <include file="$(find pxpincher_launch)/launch/pxp.launch"              />
+  
+
+    <include file="$(find robot_vision)/launch/vision_range.launch"      />
+    <include file="$(find pxpincher_launch)/launch/pxp_vision_pick.launch"      />
+    
+
     <include file="$(find simple_voice)/launch/simple_voice_default.launch"      />
-
-
 
 
 

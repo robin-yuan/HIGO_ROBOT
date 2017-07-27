@@ -1,0 +1,10 @@
+<launch>
+
+    <node pkg="robot_vision " type="saveImage" name="sace_both_image" output="screen">
+    <node pkg="robot_vision " type="indirectProcessImage" name="get_disparity_send_chatter" output="screen">
+
+
+
+
+
+</launch>
