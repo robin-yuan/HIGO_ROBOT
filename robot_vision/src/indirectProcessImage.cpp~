@@ -500,8 +500,8 @@ int main(int argc, char** argv)
 	   while (nh.ok()) 
 	   {
 	  
-	    image=imread("/home/ros/gohi_ws/src/robot_vision/data/imageL.jpg");
-	    image1=imread("/home/ros/gohi_ws/src/robot_vision/data/imageR.jpg");
+	    image1=imread("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg");
+	    image=imread("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg");
 
 
 	    imshow("left", image);

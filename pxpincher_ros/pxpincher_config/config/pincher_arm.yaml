@@ -1,5 +1,5 @@
 source: pincher_arm.yaml
-port: /dev/ttyUSB0
+port: /dev/ttyUSB1
 rate: 25
 baud: 115200
 joints: {

@@ -30,8 +30,8 @@ void onMouse(int Event, int x, int y, int flags, void* param)
 	{
 	
 
-		imwrite("/home/ros/gohi_ws/src/robot_vision/data/imageL.jpg", img1);
-		imwrite("/home/ros/gohi_ws/src/robot_vision/data/imageR.jpg", img);
+		imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg", img1);
+		imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg", img);
 
 	}
 
