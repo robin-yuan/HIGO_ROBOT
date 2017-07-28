@@ -232,6 +232,11 @@ add_executable(saveImage src/saveImage.cpp)
 target_link_libraries(saveImage ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
 add_dependencies(saveImage robot_vision_generate_messages_cpp)
 
+add_executable(saveMoreImage src/saveMoreImage.cpp)  
+target_link_libraries(saveMoreImage ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
+add_dependencies(saveMoreImage robot_vision_generate_messages_cpp)
+
+
 add_executable(indirectProcessImage src/indirectProcessImage.cpp)  
 target_link_libraries(indirectProcessImage ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
 add_dependencies(indirectProcessImage robot_vision_generate_messages_cpp)
@@ -243,5 +248,10 @@ add_dependencies(indirectRecogImage robot_vision_generate_messages_cpp)
 add_executable(directProcessImage src/directProcessImage.cpp)  
 target_link_libraries(directProcessImage ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
 add_dependencies(directProcessImage robot_vision_generate_messages_cpp)
+
+add_executable(directmeasure src/directmeasure.cpp)  
+target_link_libraries(directmeasure ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
+add_dependencies(directmeasure robot_vision_generate_messages_cpp)
+
 
 

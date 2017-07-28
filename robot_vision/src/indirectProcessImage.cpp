@@ -32,7 +32,7 @@ Eigen::MatrixXf RTransform(4, 4);
 Eigen::MatrixXf camPose(4, 1);
 
 
-#define   IF_RANGE  //ÊÇ·ñÆ¥Åä
+//#define   IF_RANGE  //ÊÇ·ñÆ¥Åä
 #define   IF_MEASURE //ÊÇ·ñ²âŸà
 
 
@@ -67,21 +67,24 @@ fx 0 cx
 0 fy cy
 0 0 1
 */
-Mat cameraMatrixL = (Mat_<double>(3, 3) << 486.8024222034497, 0, 322.3627527629917,
-0, 486.1221460071212, 247.4157190068541,
+Mat cameraMatrixL = (Mat_<double>(3, 3) << 779.8856855348552, 0, 237.4199467459503,
+0, 779.9889920700755, 193.102444487475,
 0, 0, 1);
-Mat distCoeffL = (Mat_<double>(5, 1) << -0.3874488357988407, 0.3296752637511454, 0.0002518353198912691, 0.0002582480464933061, -0.4881895009885176);
-Mat cameraMatrixR = (Mat_<double>(3, 3) << 490.953910210327, 0, 287.7769908302449,
-0, 491.1866940845632, 212.6963220971602,
+Mat distCoeffL = (Mat_<double>(5, 1) << 0.1946948859058712, -0.04091853710764933, 0.0003160116688853894, -0.03706066145318408, 0.7993636714615561);
+
+Mat cameraMatrixR = (Mat_<double>(3, 3) << 781.5336079917449, 0, 245.5048890133797,
+0, 783.959841982888, 206.1181912600801,
 0, 0, 1);
-Mat distCoeffR = (Mat_<double>(5, 1) << -0.3426774889277792, -0.06873164879054711, 0.001964845460516886, -0.001665735910833493, 0.209198892534306);
-Mat T = (Mat_<double>(3, 1) << -42.19636634474248,
--0.5098161159593785,
-0.4878465559066463);//T平移向量
-Mat rec = (Mat_<double>(3, 1) << 0.01390204617548014,
-0.01803636495474853,
--0.02413264493544303);//rec旋转向量
+Mat distCoeffR = (Mat_<double>(5, 1) << 0.2918417419654106, -1.773508449711521, 0.004601956295363975, -0.03078999663528584, 9.857115683235417);
+
+Mat T = (Mat_<double>(3, 1) << -64.12248646570119,
+-0.1153654690658362,
+8.004752969467615);//T平移向量
+Mat rec = (Mat_<double>(3, 1) << 0.03140106237508605,
+-0.02182721194577655,
+-0.002887291131761299);//rec旋转向量
 Mat R;//R 旋转矩阵
+
 
 //µØÃæãÐÖµ
 double thresholdH;
@@ -158,12 +161,142 @@ double maxS1 = 0.0;
 
 geometry_msgs::Twist arm_pose_;	
 Rect    roimsgs_;
+Rect    roimsgs_1;
 static  int arm_flag=0;
 
 double pan_c_position=0.0;
 double tilt_c_position=0.0;
 
 Mat disp, disp8;
+
+
+void cacseg(cv::Mat& src)
+{
+	// 定义结构元素
+
+	cv::Mat element = cv::getStructuringElement(
+		cv::MORPH_ELLIPSE, cv::Size(20, 20));
+	// 形态学开操作 
+	cv::Mat openedMat;
+	cv::morphologyEx(src, openedMat,
+		cv::MORPH_OPEN, element);
+
+	//canny边缘检测
+	int edgeThresh = 50;
+	Canny(openedMat, src, edgeThresh, edgeThresh * 3, 3);
+
+	// 结构元素定义
+	cv::Mat struElmen = getStructuringElement(cv::MORPH_RECT,
+		cv::Size(3, 3), cv::Point(-1, -1));
+
+	// 形态学闭操作     
+	morphologyEx(src, src, cv::MORPH_CLOSE, struElmen);
+
+	// 定义轮廓参数
+	std::vector< std::vector<cv::Point> > contours;
+	std::vector< std::vector<cv::Point> > resContours;
+	std::vector< cv::Vec4i > hierarchy;
+	// 连通域查找
+	findContours(src, contours, hierarchy,
+		CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	// 筛选伪轮廓   
+	for (size_t i = 0; i < contours.size(); i++)
+	{
+		if (fabs(contourArea(cv::Mat(contours[i]))) > 1000)
+			resContours.push_back(contours[i]);
+	}
+	src.setTo(0);
+	// 绘制轮廓
+	drawContours(src, resContours, -1,cv::Scalar(255, 0, 0), CV_FILLED);
+	
+}
+
+
+void cacMoments(cv::Mat src)
+{
+	Mat srcGray;
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	// 高斯滤波
+	//GaussianBlur(src, src, Size(3, 3), 0.1, 0, BORDER_DEFAULT);
+	// 灰度转换
+	//cvtColor(src, srcGray, CV_RGB2GRAY);
+
+	// 轮廓边界检测
+	findContours(src, contours, hierarchy,
+		CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	// 绘制边界
+	//drawContours(resultMat, contours, -1, cvScalar(0, 0, 255));
+	//printf("Number of contours: %d\n", (int)contours.size());
+	// 计算轮廓矩
+	vector<Moments> mu(contours.size());
+	for (int i = 0; i < (int)contours.size(); i++)
+	{
+		mu[i] = moments(contours[i], false);
+	}
+	// 分析矩计算图像相关特征
+	for (int i = 0; i < (int)contours.size(); i++)
+	{
+		// 面积 重心 边界轮廓长度
+		int area = mu[i].m00;
+		int cx = mu[i].m10 / mu[i].m00;
+		int cy = mu[i].m01 / mu[i].m00;
+		int perimeter = arcLength(contours.at(i), true);
+		// 椭圆
+		if (int(contours.at(i).size()) <= 5)
+		{
+			continue;
+		}
+		else
+		{
+			RotatedRect rRect = fitEllipse(contours.at(i));
+			double orientation = rRect.angle;
+			double orientation_rads = orientation*3.1416 / 180;
+			double majorAxis = rRect.size.height > rRect.size.width ? rRect.size.height : rRect.size.width;
+			double minorAxis = rRect.size.height > rRect.size.width ? rRect.size.width : rRect.size.height;
+			// 圆形度 离心率 周长 直径
+			double roundness = pow(perimeter, 2) / (2 * 3.1416*area);
+			double eccentricity = sqrt(1 - pow(minorAxis / majorAxis, 2));
+			double ratio = (minorAxis / majorAxis) * 100;
+			double diameter = sqrt((4 * area) / 3.1416);
+			// 输出相关特征信息
+			//printf("Area: %d\n", area);
+			//printf("Perimeter: %d\n", perimeter);
+			//printf("Major Axis: %.1f\n", majorAxis);
+			//printf("Minor Axis: %.1f\n", minorAxis);
+			//printf("Orientation: %.1f\n", orientation);
+			//printf("Roundness: %.1f\n", roundness);
+			//printf("Eccentricity: %.1f\n", eccentricity);
+			//printf("Ratio: %.1f\n", ratio);
+			//printf("Diameter: %.1f\n", diameter);
+			//printf("\n");
+			// 绘制矩形及椭圆
+			ellipse(src, rRect, cvScalar(0, 255, 0));
+			Rect ret1 = boundingRect(Mat(contours[i]));//计算右上点集的边界矩形
+			int avgX = (ret1.x + ret1.x + ret1.width) / 2; //运动物体的矩形的中点X位置
+			int avgY = (ret1.y + ret1.y + ret1.height) / 2;//运动物体的矩形的中点Y位置
+			cout << "start  x:" << ret1.x << "y:" << ret1.y << endl;
+			cout << "size  x:" << ret1.width << "y:" << ret1.height << endl;
+
+			cout << "center x:" << avgX << "y:" << avgY << endl;
+
+			rectangle(src, ret1, cvScalar(0, 0, 255));
+			//	rectangle(image, boundingRect(contours.at(i)), cvScalar(0, 0, 255));
+
+			// 绘制相关坐标
+			line(src, Point(0, 0), Point(src.cols, src.rows), cvScalar(0, 0, 255));
+
+			line(src, Point(src.cols, 0), Point(0, src.rows), cvScalar(0, 0, 255));
+			// 绘制起始线
+			line(src, Point(cx, cy), Point((int)(cx + 30 * cos(orientation_rads)),
+				(int)(cy + 30 * sin(orientation_rads))), cvScalar(255, 0, 0), 1);
+			// 输出图像起始
+			char pChar[100];
+			sprintf(pChar, "Ori: %.0f", orientation);
+			putText(src, pChar, Point(cx, cy), FONT_HERSHEY_SIMPLEX, 0.4, cvScalar(255));
+		}
+	}
+}
 
 
 void updateThreshold(int, void*)
@@ -184,36 +317,29 @@ bool compareLast(double h, double lh)
 	return fabs(h - lh)>10;
 }
 
+
 void D_H()
 {
 	//²ÎÊý
-double L01=(9-1.5+17.3)/100;
-double L12=(36-7.6)/100;
-double L23=3.0/100;
-double L34=5.0/100;
-double L45=4.0/100;
+double L01=(8)/100;
+double L12=(10.5)/100;
+double L23=36.5/100;
+double L34=3.0/100;
+double L45=5.0/100;
 double L56=4.0/100;
-double L67=3.8/100;
-double L78=2.25/100;
-double L89=0;
-double L910=2.4/100;
+double L67=5.0/100;
+double L78=2.3/100;
+double L89=3.0/100;
+double L910=0.5/100;
 
 
 
 	//ž÷¹ØœÚœÇ¶È//pi Îª180¶È
-double a0 = 0 * pi /180;
-double a1 = 0* pi /180;
-double a2 = 0 * pi /180;
-double a3 = 0 * pi /180;
-double a4 = 0 * pi /180;
-double a5 =pan_c_position *radToDegree * pi /180;
-double a6 =tilt_c_position *radToDegree * pi /180;
-double a7 = -90 * pi /180;
-double a8 =0 * pi /180;
-double a9 =90 * pi /180;
+double a1 =pan_c_position *radToDegree * pi /180;
+double a2 =tilt_c_position *radToDegree * pi /180;
+double a3 = 90 * pi /180;
+double a4 =-90 * pi /180;
 
-	double s0 = sin(a0);
-	double c0 = cos(a0);
 
 	double s1 = sin(a1);
 	double c1 = cos(a1);
@@ -227,87 +353,52 @@ double a9 =90 * pi /180;
 	double s4 = sin(a4);
 	double c4 = cos(a4);
 
-	double s5 = sin(a5);
-	double c5 = cos(a5);
 
-	double s6 = sin(a6);
-	double c6 = cos(a6);
-	
-        double s7 = sin(a7);
-	double c7 = cos(a7);
-
-	
-	double s8= sin(a8);
-	double c8= cos(a8);
-	
-	double s9= sin(a9);
-	double c9= cos(a9);
 	
 	//¹ØœÚ0 Aµã
-	Eigen::MatrixXf A01(4, 4), T01(4, 4);
-	A01 << 1, 0, 0, -L01, 
+    Eigen::MatrixXf  A01(4, 4), T01(4, 4);
+    A01 << 1, 0, 0, 0,
 	       0, 1, 0, 0, 
-	       0, 0, 1, 0, 
+           0, 0, 1, -L01,
 	       0, 0, 0, 1;
 	T01 = A01;
 
 	//¹ØœÚ2 Bµã
-	Eigen::MatrixXf R01(4, 4), A12(4, 4), T02(4, 4);
-	R01 << c1, 0, s1, 0, 
+    Eigen::MatrixXf  A12(4, 4), T02(4, 4);
+    A12 << 1, 0, 0, -L12,
 	       0, 1, 0, 0, 
-	       -s1, 0, c1, 0, 
+           0, 0, 1, 0,
 	       0, 0, 0, 1;
-	       
-	A12 << 1, 0, 0, 0, 
-	       0, 1, 0, 0, 
-	       0, 0, 1, L12, 
-	       0, 0, 0, 1;
-	T02 = T01 * R01 * A12;
+    T02 = T01 * A12;
 
 	//¹ØœÚ3 Cµã
-	Eigen::MatrixXf R12(4, 4), A23(4, 4), T03(4, 4);
-	R12 <<   c2, 0, s2, 0,
-	         0, 1, 0, 0, 
-	         -s2, 0, c2, 0,
-	          0, 0, 0, 1;
-	          
-	A23 <<   1, 0, 0, L23,
+    Eigen::MatrixXf A23(4, 4), T03(4, 4);
+    A23 <<   1, 0, 0, 0,
 	         0, 1, 0, 0,
-	         0, 0, 1, 0,
+             0, 0, 1, L23,
 	         0, 0, 0, 1;
-	T03 = T02 * R12 * A23;
+    T03 = T02 * A23;
 
 	//¹ØœÚ4 Dµã
-	Eigen::MatrixXf R23(4, 4), A34(4, 4), T04(4, 4);
-	R23 <<  c3, 0, s3, 0,
-	        0, 1, 0, 0, 
-	        -s3, 0, c3, 0,
-	         0, 0, 0, 1;
-	         
-	A34 <<   1, 0, 0, 0,
+    Eigen::MatrixXf  A34(4, 4), T04(4, 4);
+    A34 <<   1, 0, 0, L34,
 	         0, 1, 0, 0, 
-	         0, 0, 1, L34,
-	          0, 0, 0, 1;
-	          
-	T04 = T03 * R23 * A34;
+             0, 0, 1, 0,
+	          0, 0, 0, 1;          
+    T04 = T03 * A34;
 
 	//¹ØœÚ5 Eµã
-	Eigen::MatrixXf R34(4, 4), A45(4, 4), T05(4, 4);
-	R34 <<  c4, 0, s4, 0, 
-	        0, 1, 0, 0, 
-	        -s4, 0, c4, 0,
-	         0, 0, 0, 1;
-	         
+    Eigen::MatrixXf   A45(4, 4), T05(4, 4);
 	A45 <<  1, 0, 0, 0, 
 	        0, 1, 0, 0, 
 	        0, 0, 1, L45,
 	         0, 0, 0, 1;
-	T05 = T04 * R34 * A45;
+    T05 = T04  * A45;
 
 	//¹ØœÚ6 Fµã
-	Eigen::MatrixXf R45(4, 4), A56(4, 4), T06(4, 4);
-	R45 <<  c5, -s5, 0, 0, 
-	        s5, c5, 0, 0, 
+    Eigen::MatrixXf  A56(4, 4), T06(4, 4);
+    R45 <<  c1, -s1, 0, 0,
+            s1, c1, 0, 0,
 	        0, 0, 1, 0,
 	        0, 0, 0, 1;
 	         
@@ -316,11 +407,12 @@ double a9 =90 * pi /180;
 	        0, 0, 1, L56,
 	         0, 0, 0, 1;
 	T06 = T05 * R45 * A56;
+
 	//¹ØœÚ7 Pµã
 	Eigen::MatrixXf R56(4, 4), A67(4, 4), T07(4, 4);
-	R56 <<  c6, 0, s6, 0,
+    R56 <<  c2, 0, s2, 0,
 	        0, 1, 0, 0, 
-	        -s6, 0, c6,0,
+            -s2, 0, c2,0,
 	         0, 0, 0, 1;
 	        
 	A67 <<  1, 0, 0, 0,
@@ -329,43 +421,37 @@ double a9 =90 * pi /180;
 	         0, 0, 0, 1;
 	T07 = T06 * R56 * A67;
 	
-	Eigen::MatrixXf R67(4, 4), A78(4, 4), T08(4, 4);
-	R67 <<  1, 0,  0, 0,
-	         0, c7, -s7, 0, 
-	         0, s7, c7, 0, 
-	         0, 0, 0, 1;
-	         
-	A78 <<  1, 0, 0, 0, 
+    Eigen::MatrixXf  A78(4, 4), T08(4, 4);
+    A78 <<  1, 0, 0, L78,
 	        0, 1, 0, 0, 
-	        0, 0, 1, L78, 
+            0, 0, 1, 0,
 	        0, 0, 0, 1;
-	T08 = T07 * R67 * A78;
+    T08 = T07 * A78;
 	
 	
 	
 	
-	Eigen::MatrixXf R78(4, 4), A89(4, 4), T09(4, 4);
-	R78 <<  c8, 0, s8, 0,
-	        0, 1, 0, 0, 
-	        -s8, 0, c8,0,
-	         0, 0, 0, 1;
-
+    Eigen::MatrixXf  A89(4, 4), T09(4, 4);
 	A89 <<  1, 0, 0, 0, 
-	        0, 1, 0, 0, 
-	        0, 0, 1, L89, 
+            0, 1, 0, L89,
+            0, 0, 1, 0,
 	        0, 0, 0, 1;
-	T09 = T08 * R78 *A89 ;
+    T09 = T08 *A89 ;
 	
-	Eigen::MatrixXf R89(4, 4), A910(4, 4),T0P(4, 4);
-	R89 <<   c9, 0, s9, 0,
+    Eigen::MatrixXf  A910(4, 4),T0P(4, 4),R1(4,4),R2(4,4);
+    A910 <<  1, 0, 0, L910,
 	        0, 1, 0, 0, 
-	        -s9, 0, c9,0,
-	         0, 0, 0, 1;
-	A910 <<  1, 0, 0, 0, 
-	        0, 1, 0, 0, 
-	        0, 0, 1, L910, 
+            0, 0, 1, 0,
 	        0, 0, 0, 1;
-	T0P = T09 * R89*A910;
+    R1    <<  c3, 0, s3, 0,
+            0, 1, 0, 0,
+            -s3, 0, c3,0,
+             0, 0, 0, 1;
+    R2 <<  c4, -s4, 0, 0,
+            s4, c4, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1;
+    T0P = T09 *A910 * R1 * R2;
 	
   	RTransform = T0P;
 	
@@ -394,7 +480,26 @@ void stereo_match(int, void*)
 	disp.convertTo(disp8, CV_8U, 255 / ((numDisparities * 16 + 16)*16.));
 	reprojectImageTo3D(disp, xyz, Q, true); 
 	xyz = xyz * 16;
-        rectangle(disp8, roimsgs_, Scalar(255, 0, 0), 1, 8, 0);
+        rectangle(disp8, roimsgs_, Scalar(255, 255, 255), 1, 8, 0);
+
+        rectangle(disp8, roimsgs_1, Scalar(255, 255, 255), 1, 8, 0);
+
+/*
+
+		//Mat resultMat;
+		//Mat resultMat1;
+
+               Mat temp1;
+
+
+
+		//cacseg(dstImage1);
+		//image1.copyTo(resultMat1, dstImage1);
+		//Mat temp1 = resultMat1.clone();
+		cacMoments(disp8);
+		temp1 = disp8.clone();
+		imshow("siteMat1", temp1);
+*/
         
 	imshow("disparity", disp8);
 }
@@ -453,18 +558,34 @@ void tiltStateCallBack(const dynamixel_msgs::JointState& state)
    // cout<<"the tilt pose is "<<  tilt_c_position <<endl;
 }
 
+
+
 void camshiftGetRoiCallBack(const sensor_msgs::RegionOfInterest& roimsgs )
 {
 
-      roimsgs_.x=roimsgs.x_offset+30;
-      roimsgs_.y=roimsgs.y_offset+30;
-      roimsgs_.width=roimsgs.width+30;
-      roimsgs_.height=roimsgs.height+30;
+      roimsgs_.x=roimsgs.x_offset;
+      roimsgs_.y=roimsgs.y_offset;
+      roimsgs_.width=roimsgs.width;
+      roimsgs_.height=roimsgs.height;
    //   cout<<"the x  is "<<  roimsgs.x_offset <<endl;
    //   cout<<"the y  is "<<  roimsgs.y_offset <<endl;
    //   cout<<"the width  is "<<  roimsgs.width <<endl;
    //   cout<<"the height  is "<<  roimsgs.height <<endl;
 }
+
+void camshiftGetRoiCallBack1(const sensor_msgs::RegionOfInterest& roimsgs )
+{
+
+      roimsgs_1.x=roimsgs.x_offset;
+      roimsgs_1.y=roimsgs.y_offset;
+      roimsgs_1.width=roimsgs.width;
+      roimsgs_1.height=roimsgs.height;
+   //   cout<<"the x  is "<<  roimsgs.x_offset <<endl;
+   //   cout<<"the y  is "<<  roimsgs.y_offset <<endl;
+   //   cout<<"the width  is "<<  roimsgs.width <<endl;
+   //   cout<<"the height  is "<<  roimsgs.height <<endl;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -478,8 +599,8 @@ int main(int argc, char** argv)
            ros::Publisher  pub1=nh.advertise<geometry_msgs::Twist>("/chatter",1);
            ros::Subscriber headPanStatesubscriber =  nh.subscribe("/head_pan_joint/state/", 1, panStateCallBack);
            ros::Subscriber headTiltStateSubscriber = nh.subscribe("/head_tilt_joint/state/", 1, tiltStateCallBack);
-           ros::Subscriber camshiftRoiSubscriber =   nh.subscribe("/roi", 1, camshiftGetRoiCallBack);
-
+           ros::Subscriber camshiftRoiSubscriber =   nh.subscribe("/roi/left", 1, camshiftGetRoiCallBack);
+           ros::Subscriber camshiftRoiSubscriber1 =   nh.subscribe("/roi/right", 1, camshiftGetRoiCallBack1);
  
 	  
 

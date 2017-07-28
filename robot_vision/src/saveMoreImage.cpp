@@ -6,6 +6,7 @@
 #include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
 #include<opencv2/imgproc/imgproc.hpp>
+#include <fstream> 
 
 
 
@@ -15,6 +16,8 @@ static const std::string INPUT1 = "Input1";
 static const std::string OUTPUT1 = "Output1";
 
 
+bool left_mouse = false;
+int pic_count = 0;
 
 using namespace cv;
 using namespace std;
@@ -22,22 +25,50 @@ Mat img,img1;
 Mat img_out,img_out1;
 bool rightFLAG=0;
 bool leftFLAG=0;
-Rect    roimsgs_;
-Rect    roimsgs_1;
+ofstream fout;						//写入文件
+const char* imageFilename = "/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/Calibdata.txt";
 
-
-
-
+#define photo_NUM  10
 
 void onMouse(int Event, int x, int y, int flags, void* param)
 {
 	if (Event == CV_EVENT_LBUTTONDOWN)
 	{
-	        
 
-		imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg", img1);
-		imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg", img);
+		left_mouse = true;
 
+		if (pic_count == 0)
+		{
+			fout.open(imageFilename);
+		}
+
+
+		pic_count++;
+		string imageFileName;
+
+		std::stringstream StrStm;
+		StrStm << pic_count;
+		StrStm >> imageFileName;
+		imageFileName += ".jpg";
+		
+		if (pic_count >= photo_NUM) pic_count = 0;
+
+	
+		////用于存储打印图片
+		imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imgname_L" + imageFileName, img1);
+		imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imgname_R" + imageFileName, img);
+
+                fout << "imgname_L" + imageFileName << endl;
+                fout << "imgname_R" + imageFileName << endl;
+
+
+	}
+	else if (Event == CV_EVENT_LBUTTONUP)
+	{
+		left_mouse = false;
+	}
+	else if ((Event == CV_EVENT_MOUSEMOVE) && (left_mouse == true))
+	{
 	}
 
 
@@ -52,7 +83,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     leftFLAG=1;
     cv_ptr =  cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     img=cv_ptr->image;
-   // rectangle(img, roimsgs_, Scalar(255, 255, 255), 3, 8, 0);
+
 
 
   }
@@ -71,7 +102,7 @@ void imageCallback1(const sensor_msgs::ImageConstPtr& msg)
     rightFLAG=1;
     cv_ptr1 =  cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     img1=cv_ptr1->image;
-   // rectangle(img1, roimsgs_1, Scalar(255, 255, 255), 3, 8, 0);
+
  
 
   }
@@ -167,32 +198,6 @@ void cacMoments(cv::Mat src)
 	}
 }
 
-void camshiftGetRoiCallBack(const sensor_msgs::RegionOfInterest& roimsgs )
-{
-
-      roimsgs_.x=roimsgs.x_offset-50;
-      roimsgs_.y=roimsgs.y_offset-50;
-      roimsgs_.width=roimsgs.width+100;
-      roimsgs_.height=roimsgs.height+100;
-   //   cout<<"the x  is "<<  roimsgs.x_offset <<endl;
-   //   cout<<"the y  is "<<  roimsgs.y_offset <<endl;
-   //   cout<<"the width  is "<<  roimsgs.width <<endl;
-   //   cout<<"the height  is "<<  roimsgs.height <<endl;
-}
-
-void camshiftGetRoiCallBack1(const sensor_msgs::RegionOfInterest& roimsgs )
-{
-
-      roimsgs_1.x=roimsgs.x_offset-50;
-      roimsgs_1.y=roimsgs.y_offset-50;
-      roimsgs_1.width=roimsgs.width+100;
-      roimsgs_1.height=roimsgs.height+100;
-   //   cout<<"the x  is "<<  roimsgs.x_offset <<endl;
-   //   cout<<"the y  is "<<  roimsgs.y_offset <<endl;
-   //   cout<<"the width  is "<<  roimsgs.width <<endl;
-   //   cout<<"the height  is "<<  roimsgs.height <<endl;
-}
-
 
 int main(int argc, char **argv)
 {
@@ -209,9 +214,6 @@ int main(int argc, char **argv)
   image_transport::ImageTransport it(nh);
   image_transport::Subscriber sub =  it.subscribe("/camera/image/image_raw/left", 1, imageCallback);
   image_transport::Subscriber sub1 = it.subscribe("/camera/image/image_raw/right", 1, imageCallback1);
-  ros::Subscriber camshiftRoiSubscriber =   nh.subscribe("/roi/left", 1, camshiftGetRoiCallBack);
-
-  ros::Subscriber camshiftRoiSubscriber1 =   nh.subscribe("/roi/right", 1, camshiftGetRoiCallBack1);
 
 
   while (nh.ok()) 
@@ -220,7 +222,7 @@ int main(int argc, char **argv)
      {
        leftFLAG=0;
 
-              
+
        cv::cvtColor(img, img_out, CV_BGR2GRAY);  
        cv::imshow(INPUT, img);
        cv::imshow(OUTPUT, img_out);     	   
@@ -230,7 +232,6 @@ int main(int argc, char **argv)
      if(rightFLAG)
      {
        rightFLAG=0;
-
   
        cv::cvtColor(img1, img_out1, CV_BGR2GRAY);  
        cv::imshow(INPUT1, img1);
@@ -239,9 +240,7 @@ int main(int argc, char **argv)
         
      }
 
-     char key = cvWaitKey(30);
-
-
+     char key = cvWaitKey(5);
      ros::spinOnce(); 
   }
  

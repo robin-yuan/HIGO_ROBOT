@@ -232,6 +232,11 @@ add_executable(saveImage src/saveImage.cpp)
 target_link_libraries(saveImage ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
 add_dependencies(saveImage robot_vision_generate_messages_cpp)
 
+add_executable(saveMoreImage src/saveMoreImage.cpp)  
+target_link_libraries(saveMoreImage ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
+add_dependencies(saveMoreImage robot_vision_generate_messages_cpp)
+
+
 add_executable(indirectProcessImage src/indirectProcessImage.cpp)  
 target_link_libraries(indirectProcessImage ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
 add_dependencies(indirectProcessImage robot_vision_generate_messages_cpp)
