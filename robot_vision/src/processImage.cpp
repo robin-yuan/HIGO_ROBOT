@@ -182,19 +182,21 @@ bool compareLast(double h, double lh)
 void D_H()
 {
 	//²ÎÊý
-double L01=(9-1.5+17.3)/100;
-double L12=(42.6+0.8-4-2.7)/100;
-double L23=3.0/100;
-double L34=5.0/100;
-double L45=4.0/100;
+double L01=(8)/100;
+double L12=(10.5)/100;
+double L23=36.5/100;
+double L34=3.0/100;
+double L45=5.0/100;
 double L56=4.0/100;
-double L67=6.0/100;
-double L78=2.0/100;
+double L67=5.0/100;
+double L78=2.3/100;
+double L89=3.0/100;
+double L910=0.5/100;
 
 
 	//ž÷¹ØœÚœÇ¶È//pi Îª180¶È
 double a0 = 0 * pi /180;
-double a1 = 0* pi /180;
+double a1 = 0 * pi /180;
 double a2 = 0 * pi /180;
 double a3 = 0 * pi /180;
 double a4 = 0 * pi /180;

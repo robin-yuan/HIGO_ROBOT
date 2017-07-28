@@ -501,7 +501,7 @@ int main(int argc, char** argv)
 	   {
 	  
 	    image1=imread("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg");
-	    image=imread("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg");
+	    image=imread( "/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg");
 
 
 	    imshow("left", image);
