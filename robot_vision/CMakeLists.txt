@@ -249,4 +249,7 @@ add_executable(directProcessImage src/directProcessImage.cpp)
 target_link_libraries(directProcessImage ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
 add_dependencies(directProcessImage robot_vision_generate_messages_cpp)
 
+add_executable(roi_stable_photo src/roi_stable_photo.cpp)  
+target_link_libraries(roi_stable_photo ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
+add_dependencies(roi_stable_photo robot_vision_generate_messages_cpp)
 
