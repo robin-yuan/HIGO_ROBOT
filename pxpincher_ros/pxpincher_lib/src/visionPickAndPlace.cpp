@@ -81,11 +81,11 @@ int main( int argc, char** argv )
       {
         revCommandFlag=0;
 
-        visualization_msgs::InteractiveMarker taskspace_marker;
-        taskspace_marker.pose.orientation.w=0.7204843759536743;
-        taskspace_marker.pose.orientation.x=-0.005342945922166109;
-        taskspace_marker.pose.orientation.y=0.6934410929679871;
-        taskspace_marker.pose.orientation.z=0.0054045445285737514;
+        //visualization_msgs::InteractiveMarker taskspace_marker;
+        //taskspace_marker.pose.orientation.w=0.7204843759536743;
+        //taskspace_marker.pose.orientation.x=-0.005342945922166109;
+       // taskspace_marker.pose.orientation.y=0.6934410929679871;
+        //taskspace_marker.pose.orientation.z=0.0054045445285737514;
 
         robot.setEndeffectorPose(desired_ee,0.2,false,false);
       }

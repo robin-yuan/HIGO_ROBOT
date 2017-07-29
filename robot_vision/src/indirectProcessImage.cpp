@@ -56,7 +56,7 @@ Point origin;         //Êó±ê°ŽÏÂµÄÆðÊŒµã
 Rect selection;      //¶šÒåŸØÐÎÑ¡¿ò
 bool selectObject = false;    //ÊÇ·ñÑ¡Ôñ¶ÔÏó
 
-int blockSize = 0, uniquenessRatio = 0, numDisparities = 0;
+int blockSize = 0, uniquenessRatio = 0, numDisparities = 16;
 //Ptr<StereoBM> bm = StereoBM::create(16, 9);
 StereoBM bm;
 
@@ -275,25 +275,25 @@ void cacMoments(cv::Mat src)
 			Rect ret1 = boundingRect(Mat(contours[i]));//计算右上点集的边界矩形
 			int avgX = (ret1.x + ret1.x + ret1.width) / 2; //运动物体的矩形的中点X位置
 			int avgY = (ret1.y + ret1.y + ret1.height) / 2;//运动物体的矩形的中点Y位置
-			cout << "start  x:" << ret1.x << "y:" << ret1.y << endl;
-			cout << "size  x:" << ret1.width << "y:" << ret1.height << endl;
+            //cout << "start  x:" << ret1.x << "y:" << ret1.y << endl;
+            //cout << "size  x:" << ret1.width << "y:" << ret1.height << endl;
 
-			cout << "center x:" << avgX << "y:" << avgY << endl;
+            //cout << "center x:" << avgX << "y:" << avgY << endl;
 
 			rectangle(src, ret1, cvScalar(0, 0, 255));
 			//	rectangle(image, boundingRect(contours.at(i)), cvScalar(0, 0, 255));
 
 			// 绘制相关坐标
-			line(src, Point(0, 0), Point(src.cols, src.rows), cvScalar(0, 0, 255));
+            //line(src, Point(0, 0), Point(src.cols, src.rows), cvScalar(0, 0, 255));
 
-			line(src, Point(src.cols, 0), Point(0, src.rows), cvScalar(0, 0, 255));
+            //line(src, Point(src.cols, 0), Point(0, src.rows), cvScalar(0, 0, 255));
 			// 绘制起始线
-			line(src, Point(cx, cy), Point((int)(cx + 30 * cos(orientation_rads)),
-				(int)(cy + 30 * sin(orientation_rads))), cvScalar(255, 0, 0), 1);
+            //line(src, Point(cx, cy), Point((int)(cx + 30 * cos(orientation_rads)),
+                //(int)(cy + 30 * sin(orientation_rads))), cvScalar(255, 0, 0), 1);
 			// 输出图像起始
-			char pChar[100];
-			sprintf(pChar, "Ori: %.0f", orientation);
-			putText(src, pChar, Point(cx, cy), FONT_HERSHEY_SIMPLEX, 0.4, cvScalar(255));
+            //char pChar[100];
+            //sprintf(pChar, "Ori: %.0f", orientation);
+            //putText(src, pChar, Point(cx, cy), FONT_HERSHEY_SIMPLEX, 0.4, cvScalar(255));
 		}
 	}
 }
@@ -321,13 +321,13 @@ bool compareLast(double h, double lh)
 void D_H()
 {
 	//²ÎÊý
-double L01=(8)/100;
+double L01=(8.0)/100;
 double L12=(10.5)/100;
 double L23=36.5/100;
 double L34=3.0/100;
 double L45=5.0/100;
 double L56=4.0/100;
-double L67=5.0/100;
+double L67=5.2/100;
 double L78=2.3/100;
 double L89=3.0/100;
 double L910=0.5/100;
@@ -495,13 +495,16 @@ void stereo_match(int, void*)
 
 		//cacseg(dstImage1);
 		//image1.copyTo(resultMat1, dstImage1);
-		//Mat temp1 = resultMat1.clone();
-		cacMoments(disp8);
-		temp1 = disp8.clone();
-		imshow("siteMat1", temp1);
-*/
+        //Mat temp1 = resultMat1.clone();*/
+
+
+//         Mat temp1;
+//        cacMoments(disp8);
+//		temp1 = disp8.clone();
+        //imshow("siteMat1", temp1);
+
         
-	imshow("disparity", disp8);
+    imshow("disparity", disp8);
 }
 
 
@@ -607,8 +610,8 @@ int main(int argc, char** argv)
 	   cv::Mat image,image1;
 	   cv::Mat frame,frame1;
 
-	   namedWindow("left", 1);
-	   namedWindow("right", 1);
+	   //namedWindow("left", 1);
+	   //namedWindow("right", 1);
 	
 	   namedWindow("disparity", CV_WINDOW_AUTOSIZE);
 	
@@ -620,13 +623,20 @@ int main(int argc, char** argv)
            ros::Rate loop_rate(33);
 	   while (nh.ok()) 
 	   {
-	  
-	    image1=imread("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg");
-	    image=imread( "/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg");
+           image1=imread("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg");
+           image=imread( "/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg");
+
+            if((image1.cols!=640)||(image1.rows!=480)||(image.cols!=640)||(image.rows!=480))
+            {
+
+                 image1=imread("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/back_imageL.jpg");
+                 image=imread( "/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/back_imageR.jpg");
+            }
 
 
-	    imshow("left", image);
-	    imshow("right", image1);
+
+	    //imshow("left", image);
+	    //imshow("right", image1);
 	   //---------------------------
 	  #ifdef IF_RANGE
 	    cvtColor(image, imageHSV, CV_BGR2HSV);
@@ -762,7 +772,7 @@ int main(int argc, char** argv)
 			cv::Scalar(255, 0, 0), CV_FILLED);
 		image.copyTo(resultMat, dstImage);
 
-//		imshow("resultMat", resultMat);
+        imshow("resultMat", resultMat);
 /*
                 cv::Mat result;
 		for (size_t n = 0; n != resContours.size(); ++n)

@@ -63,7 +63,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     leftFLAG=1;
     cv_ptr =  cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     img=cv_ptr->image;
-   // rectangle(img, roimsgs_, Scalar(255, 255, 255), 3, 8, 0);
+    //rectangle(img, roimsgs_, Scalar(255, 255, 255), 3, 8, 0);
 
 
   }
@@ -82,7 +82,7 @@ void imageCallback1(const sensor_msgs::ImageConstPtr& msg)
     rightFLAG=1;
     cv_ptr1 =  cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
     img1=cv_ptr1->image;
-   // rectangle(img1, roimsgs_1, Scalar(255, 255, 255), 3, 8, 0);
+    //rectangle(img1, roimsgs_1, Scalar(255, 255, 255), 3, 8, 0);
  
 
   }
@@ -186,20 +186,20 @@ void camshiftGetRoiCallBack(const sensor_msgs::RegionOfInterest& roimsgs )
      nowroimsgs_.width=roimsgs.width;
      nowroimsgs_.height=roimsgs.height;
 
-     if((abs(nowroimsgs_.x-preroimsgs_.x)<5)&&
-        (abs(nowroimsgs_.y-preroimsgs_.y)<5)&&
-        (abs(nowroimsgs_.width-preroimsgs_.width)<5)&&
-        (abs(nowroimsgs_.height-preroimsgs_.height)<5))
+     if((abs(nowroimsgs_.x-preroimsgs_.x)<10)&&
+        (abs(nowroimsgs_.y-preroimsgs_.y)<10)&&
+        (abs(nowroimsgs_.width-preroimsgs_.width)<10)&&
+        (abs(nowroimsgs_.height-preroimsgs_.height)<10))
      {
             
         
-        if(++onlyFirst<=1)
+        if(++onlyFirst<=100)
               {
                
                 imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg", img1);
 	        imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg", img);
               } 
-        onlyFirst=2;
+        if(onlyFirst>100)     onlyFirst=102;
      }
      else 
      {
@@ -244,9 +244,9 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
 
   cv::namedWindow(INPUT);
-  cv::namedWindow(OUTPUT);
+  //cv::namedWindow(OUTPUT);
   cv::namedWindow(INPUT1);
-  cv::namedWindow(OUTPUT1);
+  //cv::namedWindow(OUTPUT1);
   setMouseCallback(INPUT, onMouse, 0);
 
   cv::startWindowThread();
@@ -267,7 +267,7 @@ int main(int argc, char **argv)
               
        cv::cvtColor(img, img_out, CV_BGR2GRAY);  
        cv::imshow(INPUT, img);
-       cv::imshow(OUTPUT, img_out);     	   
+      // cv::imshow(OUTPUT, img_out);     	   
 
         
      }
@@ -278,7 +278,7 @@ int main(int argc, char **argv)
   
        cv::cvtColor(img1, img_out1, CV_BGR2GRAY);  
        cv::imshow(INPUT1, img1);
-       cv::imshow(OUTPUT1, img_out1);
+       //cv::imshow(OUTPUT1, img_out1);
   
         
      }
