@@ -27,9 +27,7 @@ class aaa():
     def  __init__(self):
         rospy.init_node('weixin_teleop')
         # Publish the Twist message to the cmd_vel topic
-     
-        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
-              
+           
         #create a Rate object to sleep the process at 5 Hz
         rate = rospy.Rate(5)
         
@@ -42,11 +40,18 @@ class aaa():
         
         # A mapping from keywords or phrases to commands
         #we consider the following simple commands, which you can extend on your own
-        self.commands =             ['停止',
+        self.commands =            ['停止',
                                     '前进',
                                     '后退',
                                     '左转',
                                     '右转',
+                                    '客厅',
+                                    '厨房',
+                                    '充电',
+                                    '启动机械臂',
+                                    '停止机械臂',
+                                    '开始跟踪',
+                                    '停止跟踪'
                                     ]
         rospy.loginfo("Ready to receive weixin commands")
 
@@ -106,39 +111,37 @@ class MyServerProtocol(WebSocketServerProtocol):
         ## echo back message verbatim
         #self.sendMessage(payload, isBinary)
         command = payload.decode('utf8')
-          
+   
+        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
+        self.cmd_con_pub = rospy.Publisher('Rog_result',                                 String, queue_size=1)
 
-        print(command)
-        
+
+
         # Initialize the Twist message we will publish.
         self.cmd_vel = Twist()
-        if command == '前进':
-                self.cmd_vel.linear.x = 0.2
-                self.cmd_vel.angular.z = 0.0
+        self.send_str=""
+        if   command == '前进':
+                self.cmd_vel.linear.x =   0.2
+                self.cmd_vel.angular.z =  0.0
         elif command == '后退':
-                self.cmd_vel.linear.x = -0.2
-                self.cmd_vel.angular.z = 0.0
+                self.cmd_vel.linear.x =  -0.2
+                self.cmd_vel.angular.z =  0.0
         elif command == '左转':
-                self.cmd_vel.linear.x = 0.0
-                self.cmd_vel.angular.z = 1.0
+                self.cmd_vel.linear.x =   0.0
+                self.cmd_vel.angular.z =  1.0
         elif command == '右转':
-                self.cmd_vel.linear.x = 0.0
+                self.cmd_vel.linear.x =   0.0
                 self.cmd_vel.angular.z = -1.0
-
-        print ("linear speed : " + str(self.cmd_vel.linear.x))
-        print ("angular speed: " + str(self.cmd_vel.angular.z))        
-
-
-        site1_X = "10"
-        site1_Y = "10"
-        site2_X = "50"
-        site2_Y = "50"
-
-        self.sendMessage((site1_X+site1_Y).encode("UTF-8") ,isBinary)
-        # 发送消息，binary意义同上  
+        elif command == '停止':
+                self.cmd_vel.linear.x =   0.0
+                self.cmd_vel.angular.z =  0.0
+        else :
+                print(command)
+                
+        self.cmd_vel_pub.publish(self.cmd_vel)  
+        self.cmd_con_pub.publish(command)  
         self.sendMessage(payload, isBinary)
-        # 发送消息，默认字符串形式  
-        self.sendMessage(payload)
+
 
 
        

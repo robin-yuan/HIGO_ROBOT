@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from autobahn.asyncio.websocket import WebSocketServerProtocol
-from autobahn.asyncio.websocket import WebSocketServerFactory
+from autobahn.asyncio.websocket import WebSocketServerProtocol, \
+    WebSocketServerFactory
 
 import json
 import os
 import sys
 import math
-import urllib  
 
 import rosgraph.impl.graph
 import rospy
@@ -22,6 +21,10 @@ from std_msgs.msg import String
 
 
 ID = '/rosnode'
+
+
+
+
 
 class aaa():
     def  __init__(self):
@@ -48,7 +51,7 @@ class aaa():
                                     '左转',
                                     '右转',
                                     ]
-        rospy.loginfo("Ready to receive weixin commands")
+        rospy.loginfo("Ready to receive voice commands")
 
 def get_node_names(namespace=None):
 
@@ -94,10 +97,8 @@ class MyServerProtocol(WebSocketServerProtocol):
         print("Client connecting: {0}".format(request.peer))
 
     def onOpen(self):
-        buf=""
         print("WebSocket connection open.")
-        
-     # 收到消息后的处理函数，其中isbinary指示是字符串形式还是二进制  
+
     def onMessage(self, payload, isBinary):
         if isBinary:
             print("Binary message received: {0} bytes".format(len(payload)))
@@ -106,9 +107,13 @@ class MyServerProtocol(WebSocketServerProtocol):
         ## echo back message verbatim
         #self.sendMessage(payload, isBinary)
         command = payload.decode('utf8')
-          
+
 
         print(command)
+        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
+              
+        #create a Rate object to sleep the process at 5 Hz
+        rate = rospy.Rate(5)
         
         # Initialize the Twist message we will publish.
         self.cmd_vel = Twist()
@@ -127,18 +132,28 @@ class MyServerProtocol(WebSocketServerProtocol):
 
         print ("linear speed : " + str(self.cmd_vel.linear.x))
         print ("angular speed: " + str(self.cmd_vel.angular.z))        
+        deltaT=0.2
 
+        deltaX=(self.cmd_vel.linear.x)*deltaT*(math.cos(self.cmd_vel.angular.z*deltaT))
+        deltaY=(self.cmd_vel.linear.x)*deltaT*(math.sin(self.cmd_vel.angular.z*deltaT))
+        
+        
+        print ("X : " + str(deltaX*100))
+        print ("Y : " + str(deltaY*100))
+  
+       
+        self.cmd_vel_pub.publish(self.cmd_vel)  
 
-        site1_X = "10"
-        site1_Y = "10"
-        site2_X = "50"
-        site2_Y = "50"
-
-        self.sendMessage((site1_X+site1_Y).encode("UTF-8") ,isBinary)
-        # 发送消息，binary意义同上  
         self.sendMessage(payload, isBinary)
-        # 发送消息，默认字符串形式  
-        self.sendMessage(payload)
+
+
+
+
+        
+
+
+
+
 
 
        

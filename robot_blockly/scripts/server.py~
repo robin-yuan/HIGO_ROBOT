@@ -28,7 +28,7 @@ class aaa():
         rospy.init_node('weixin_teleop')
         # Publish the Twist message to the cmd_vel topic
      
-        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
+
               
         #create a Rate object to sleep the process at 5 Hz
         rate = rospy.Rate(5)
@@ -106,20 +106,9 @@ class MyServerProtocol(WebSocketServerProtocol):
         ## echo back message verbatim
         #self.sendMessage(payload, isBinary)
         command = payload.decode('utf8')
-   
-        if not command: return None          
-        buf=command+buf
-        f = open('1.silk', 'r')
-        f.write(buf)
-    
-
-        
+        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)    
 
         print(command)
-        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
-              
-        #create a Rate object to sleep the process at 5 Hz
-        rate = rospy.Rate(5)
         
         # Initialize the Twist message we will publish.
         self.cmd_vel = Twist()

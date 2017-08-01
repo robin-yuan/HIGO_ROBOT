@@ -125,7 +125,7 @@ public:
     pub = nh_.advertise<geometry_msgs::Twist>("/mobile_base/mobile_base_controller/cmd_vel", 1000);
 
     pub1= nh_.advertise<sensor_msgs::RegionOfInterest>("/roi", 1000);
-    sub1=nh_.subscribe("/kcf_cmd_tracker",1,&ImageConverter::kcfVoiceCb, this);
+    sub1=nh_.subscribe("/Rog_result",1,&ImageConverter::kcfVoiceCb, this);
 
     cv::namedWindow(RGB_WINDOW);
     //cv::namedWindow(DEPTH_WINDOW);
@@ -138,11 +138,11 @@ public:
   }
     void kcfVoiceCb( const std_msgs::String& msg)
     {
-          if( msg.data =="shibie" )
+          if( msg.data =="开始跟踪" )
           {
               kcf_voice_en=2;
           }
-          if( msg.data =="tingzhi" )
+          if( msg.data =="停止跟踪" )
           {
               kcf_voice_en=0;
           }
@@ -212,24 +212,24 @@ public:
      if(kcf_voice_en==2)
       { 
 
-    if(enable_get_depth)
-    {
-      dist_val[0] = depthimage.at<float>(result.y+result.height/3 , result.x+result.width/3) ;
-      dist_val[1] = depthimage.at<float>(result.y+result.height/3 , result.x+2*result.width/3) ;
-      dist_val[2] = depthimage.at<float>(result.y+2*result.height/3 , result.x+result.width/3) ;
-      dist_val[3] = depthimage.at<float>(result.y+2*result.height/3 , result.x+2*result.width/3) ;
-      dist_val[4] = depthimage.at<float>(result.y+result.height/2 , result.x+result.width/2) ;
+       if(enable_get_depth)
+       {
+         dist_val[0] = depthimage.at<float>(result.y+result.height/3 , result.x+result.width/3) ;
+         dist_val[1] = depthimage.at<float>(result.y+result.height/3 , result.x+2*result.width/3) ;
+         dist_val[2] = depthimage.at<float>(result.y+2*result.height/3 , result.x+result.width/3) ;
+         dist_val[3] = depthimage.at<float>(result.y+2*result.height/3 , result.x+2*result.width/3) ;
+         dist_val[4] = depthimage.at<float>(result.y+result.height/2 , result.x+result.width/2) ;
 
-      float distance = 0;
-      int num_depth_points = 5;
-      for(int i = 0; i < 5; i++)
-      {
-        if(dist_val[i] > 0.4 && dist_val[i] < 10.0)
-          distance += dist_val[i];
-        else
-          num_depth_points--;
-      }
-      distance /= num_depth_points;
+         float distance = 0;
+         int num_depth_points = 5;
+         for(int i = 0; i < 5; i++)
+         {
+           if(dist_val[i] > 0.4 && dist_val[i] < 10.0)
+             distance += dist_val[i];
+           else
+             num_depth_points--;
+         }
+         distance /= num_depth_points;
 
       //calculate linear speed
       if(distance > Min_distance)
