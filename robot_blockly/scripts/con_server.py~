@@ -137,10 +137,9 @@ class MyServerProtocol(WebSocketServerProtocol):
                 self.cmd_vel.angular.z =  0.0
         else :
                 print(command)
-                self.cmd_con_pub.publish(command) 
                 
         self.cmd_vel_pub.publish(self.cmd_vel)  
-         
+        self.cmd_con_pub.publish(command)  
         self.sendMessage(payload, isBinary)
 
 
@@ -168,7 +167,9 @@ if __name__ == '__main__':
     server = loop.run_until_complete(coro)
 
     try:
+        print("aa")
         loop.run_forever()
+        
     except KeyboardInterrupt:
         pass
     finally:

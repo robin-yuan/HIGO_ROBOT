@@ -81,6 +81,8 @@ class GoToPose():
    	          self.say.publish('到达目的地客厅')
              elif command == '厨房':
                   self.say.publish('到达目的地厨房')
+             elif command == '充电':
+                  self.say.publish('到达充电桩')
              rospy.loginfo("HIGO, reached the desired pose")
 
         else:

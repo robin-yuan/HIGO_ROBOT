@@ -15,11 +15,11 @@ import rospy
 
 import ast
 import roslib
-import struct
 
 import rospy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
+
 
 
 ID = '/rosnode'
@@ -28,9 +28,10 @@ class aaa():
     def  __init__(self):
         rospy.init_node('weixin_teleop')
         # Publish the Twist message to the cmd_vel topic
-     
-        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
-              
+           
+        #subscribe the voice recognitive results
+
+
         #create a Rate object to sleep the process at 5 Hz
         rate = rospy.Rate(5)
         
@@ -43,13 +44,21 @@ class aaa():
         
         # A mapping from keywords or phrases to commands
         #we consider the following simple commands, which you can extend on your own
-        self.commands =             ['停止',
+        self.commands =            ['停止',
                                     '前进',
                                     '后退',
                                     '左转',
                                     '右转',
+                                    '客厅',
+                                    '厨房',
+                                    '充电',
+                                    '启动机械臂',
+                                    '停止机械臂',
+                                    '开始跟踪',
+                                    '停止跟踪'
                                     ]
         rospy.loginfo("Ready to receive weixin commands")
+
 
 def get_node_names(namespace=None):
 
@@ -86,6 +95,7 @@ def sumStartToEnd(start,end):
 
 
 
+
 def rosnode_listnodes(namespace=None, list_uri=False, list_all=False):
     nodes_vector = _sub_rosnode_listnodes(namespace=namespace, list_uri=list_uri, list_all=list_all);
     return nodes_vector
@@ -97,6 +107,7 @@ class MyServerProtocol(WebSocketServerProtocol):
     def onOpen(self):
         buf=""
         print("WebSocket connection open.")
+        rospy.Subscriber('/upload_to_weixin', String, self.upload_msg_callback)
         
      # 收到消息后的处理函数，其中isbinary指示是字符串形式还是二进制  
     def onMessage(self, payload, isBinary):
@@ -106,30 +117,45 @@ class MyServerProtocol(WebSocketServerProtocol):
             print("Text message received: {0}".format(payload.decode('utf8')))
         ## echo back message verbatim
         #self.sendMessage(payload, isBinary)
-        
+        command = payload.decode('utf8')
+   
+        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
+        self.cmd_con_pub = rospy.Publisher('Rog_result',                                 String, queue_size=1)
 
-        while True:
-            fileinfo_size=struct.calcsize('128sl') #定义文件信息。128s表示文件名为128bytes长，l表示一个int或log文件类型，在此为文件大小
-            command = payload.decode('utf8')
-            if command: #如果不加这个if，第一个文件传输完成后会自动走到下一句
-                filename,filesize =struct.unpack('128sl',command) #根据128sl解包文件信息，与client端的打包规则相同
-                filenewname = os.path.join('/home/wb/gohi_ws/src/HIGO_ROBOT/robot_blockly/scripts',('new_'+ self.filename)) #使用strip()删除打包时附加的多余空字符
-                print (filenewname,type(filenewname))
-                recvd_size = 0 #定义接收了的文件大小
-                file = open(self.filenewname,'wb')
-                print ('stat receiving...')
-                while not recvd_size == self.filesize:
-                    file.write(rdata)
-                file.close()
-                print ('receive done')
-            else:
-                break;
-        # 发送消息，binary意义同上  
+
+
+        # Initialize the Twist message we will publish.
+        self.cmd_vel = Twist()
+        self.send_str=""
+        if   command == '前进':
+                self.cmd_vel.linear.x =   0.2
+                self.cmd_vel.angular.z =  0.0
+        elif command == '后退':
+                self.cmd_vel.linear.x =  -0.2
+                self.cmd_vel.angular.z =  0.0
+        elif command == '左转':
+                self.cmd_vel.linear.x =   0.0
+                self.cmd_vel.angular.z =  1.0
+        elif command == '右转':
+                self.cmd_vel.linear.x =   0.0
+                self.cmd_vel.angular.z = -1.0
+        elif command == '停止':
+                self.cmd_vel.linear.x =   0.0
+                self.cmd_vel.angular.z =  0.0
+        else :
+                print(command)
+                
+        self.cmd_vel_pub.publish(self.cmd_vel)  
+        self.cmd_con_pub.publish(command)  
         self.sendMessage(payload, isBinary)
 
 
 
-       
+    def upload_msg_callback(self, msg):
+        # Get the motion command from the recognized phrase
+        command = msg.data
+        print("the site is"+command)  
+        self.sendMessage(command.encode("UTF-8") )       
 
     def onClose(self, wasClean, code, reason):
         print("WebSocket connection closed: {0}".format(reason))
@@ -147,13 +173,13 @@ if __name__ == '__main__':
     factory.protocol = MyServerProtocol
     aaa()
 
+
     loop = asyncio.get_event_loop()
     coro = loop.create_server(factory, '0.0.0.0', 9000)
     server = loop.run_until_complete(coro)
 
     try:
         loop.run_forever()
-        print("aa")
     except KeyboardInterrupt:
         pass
     finally:
