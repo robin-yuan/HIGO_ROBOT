@@ -8,6 +8,9 @@
 #include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
 #include<opencv2/imgproc/imgproc.hpp>
+#include "std_msgs/String.h"  
+  
+#include <sstream>  
 
 
 
@@ -194,12 +197,16 @@ void camshiftGetRoiCallBack(const sensor_msgs::RegionOfInterest& roimsgs )
             
         
         if(++onlyFirst<=100)
-              {
+         {
                
-                imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg", img1);
-	        imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg", img);
-              } 
-        if(onlyFirst>100)     onlyFirst=102;
+           imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageL.jpg", img1);
+	   imwrite("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_vision/data/imageR.jpg", img);
+         } 
+        if(onlyFirst>100)    
+         { 
+            
+            onlyFirst=102;
+         }
      }
      else 
      {
@@ -254,9 +261,7 @@ int main(int argc, char **argv)
   image_transport::Subscriber sub =  it.subscribe("/camera/image/image_raw/left", 1, imageCallback);
   image_transport::Subscriber sub1 = it.subscribe("/camera/image/image_raw/right", 1, imageCallback1);
   ros::Subscriber camshiftRoiSubscriber =   nh.subscribe("/roi/left", 1, camshiftGetRoiCallBack);
-
   ros::Subscriber camshiftRoiSubscriber1 =   nh.subscribe("/roi/right", 1, camshiftGetRoiCallBack1);
-
 
   while (nh.ok()) 
   {
