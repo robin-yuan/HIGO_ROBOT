@@ -21,6 +21,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 
 
+
 ID = '/rosnode'
 
 class aaa():
@@ -28,6 +29,9 @@ class aaa():
         rospy.init_node('weixin_teleop')
         # Publish the Twist message to the cmd_vel topic
            
+        #subscribe the voice recognitive results
+
+
         #create a Rate object to sleep the process at 5 Hz
         rate = rospy.Rate(5)
         
@@ -54,6 +58,7 @@ class aaa():
                                     '停止跟踪'
                                     ]
         rospy.loginfo("Ready to receive weixin commands")
+
 
 def get_node_names(namespace=None):
 
@@ -90,6 +95,7 @@ def sumStartToEnd(start,end):
 
 
 
+
 def rosnode_listnodes(namespace=None, list_uri=False, list_all=False):
     nodes_vector = _sub_rosnode_listnodes(namespace=namespace, list_uri=list_uri, list_all=list_all);
     return nodes_vector
@@ -101,6 +107,7 @@ class MyServerProtocol(WebSocketServerProtocol):
     def onOpen(self):
         buf=""
         print("WebSocket connection open.")
+        rospy.Subscriber('/upload_to_weixin', String, self.upload_msg_callback)
         
      # 收到消息后的处理函数，其中isbinary指示是字符串形式还是二进制  
     def onMessage(self, payload, isBinary):
@@ -144,7 +151,11 @@ class MyServerProtocol(WebSocketServerProtocol):
 
 
 
-       
+    def upload_msg_callback(self, msg):
+        # Get the motion command from the recognized phrase
+        command = msg.data
+        print("the site is"+command)  
+        self.sendMessage(command.encode("UTF-8") )       
 
     def onClose(self, wasClean, code, reason):
         print("WebSocket connection closed: {0}".format(reason))
@@ -161,6 +172,7 @@ if __name__ == '__main__':
     factory = WebSocketServerFactory(u"ws://0.0.0.0:9000")
     factory.protocol = MyServerProtocol
     aaa()
+
 
     loop = asyncio.get_event_loop()
     coro = loop.create_server(factory, '0.0.0.0', 9000)

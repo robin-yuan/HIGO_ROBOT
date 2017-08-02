@@ -42,7 +42,7 @@ int main( int argc, char** argv )
   robot.initialize();
   robot.activateInteractiveJointControl();
   //--------------------------------------------------
-  ros::Subscriber armCommandSubscriber = n.subscribe("/arm/pick", 10, commandCallBack);
+  ros::Subscriber armCommandSubscriber = n.subscribe("/chatter", 10, commandCallBack);
         robot.setGripperJoint(80);
         robot.setJoints({0, 0, 0, 0});
       //  robot.setGripperJoint(100);

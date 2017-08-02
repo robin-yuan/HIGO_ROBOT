@@ -15,6 +15,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include "opencv2/imgproc/imgproc.hpp"
 
 #include "kcftracker.hpp"
 
@@ -118,13 +119,11 @@ public:
     : it_(nh_)
   {
     // Subscrive to input video feed and publish output video feed
-    image_sub_ = it_.subscribe("/camera/rgb/image_color", 1, 
-      &ImageConverter::imageCb, this);
-    depth_sub_ = it_.subscribe("/camera/depth/image", 1, 
-      &ImageConverter::depthCb, this);
+    image_sub_ = it_.subscribe("/camera/rgb/image_color", 1,  &ImageConverter::imageCb, this);
+    depth_sub_ = it_.subscribe("/camera/depth/image", 1,      &ImageConverter::depthCb, this);
     pub = nh_.advertise<geometry_msgs::Twist>("/mobile_base/mobile_base_controller/cmd_vel", 1000);
-
-    pub1= nh_.advertise<sensor_msgs::RegionOfInterest>("/roi", 1000);
+    //publish /kcf/roi
+    pub1= nh_.advertise<sensor_msgs::RegionOfInterest>("/kcf/roi", 1000);
     sub1=nh_.subscribe("/Rog_result",1,&ImageConverter::kcfVoiceCb, this);
 
     cv::namedWindow(RGB_WINDOW);
@@ -209,9 +208,30 @@ public:
   	{
   		ROS_ERROR("Could not convert from '%s' to 'TYPE_32FC1'.", msg->encoding.c_str());
   	}
-     if(kcf_voice_en==2)
-      { 
 
+       if(kcf_voice_en==2)
+       {
+ 
+          Mat dep;
+          depthimage.convertTo(dep, CV_8UC1, 1.0 );
+          // 初始化阈值参数
+          const int maxVal = 5000;
+          int low_threshold  = 1500;
+          int high_threshold = 2000;
+          cv::Mat dstTempImage1, dstTempImage2, dstImage;
+         // 小阈值对源灰度图像进行阈值化操作
+          cv::threshold( depthimage, dstTempImage1,low_threshold, maxVal, cv::THRESH_BINARY );
+         // 大阈值对源灰度图像进行阈值化操作
+          cv::threshold( depthimage, dstTempImage2,high_threshold, maxVal,cv::THRESH_BINARY_INV );
+         // 矩阵与运算得到二值化结果
+          cv::bitwise_and( dstTempImage1, dstTempImage2, dep );
+
+
+          imshow("depth", dep);
+       }
+
+
+       
        if(enable_get_depth)
        {
          dist_val[0] = depthimage.at<float>(result.y+result.height/3 , result.x+result.width/3) ;
@@ -258,7 +278,6 @@ public:
       // std::cout <<  dist_val[0]  << " / " <<  dist_val[1] << " / " << dist_val[2] << " / " << dist_val[3] <<  " / " << dist_val[4] << std::endl;
       // std::cout <<  "distance = " << distance << std::endl;
     }
-}
   	//cv::imshow(DEPTH_WINDOW, depthimage);
   	cv::waitKey(1);
   }
@@ -267,36 +286,31 @@ public:
 int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "kcf_tracker");
-    ImageConverter ic;
+        ImageConverter ic;
   
 	while(ros::ok())
 	{
 	  ros::spinOnce();
-if(kcf_voice_en==2)
-{
-          geometry_msgs::Twist twist;
-          twist.linear.x = linear_speed; 
-          twist.linear.y = 0; 
-          twist.linear.z = 0;
-          twist.angular.x = 0; 
-          twist.angular.y = 0; 
-          twist.angular.z = rotation_speed;
-          ic.pub.publish(twist);
 
+           geometry_msgs::Twist twist;
+           twist.linear.x = linear_speed;
+           twist.linear.y = 0;
+           twist.linear.z = 0;
+           twist.angular.x = 0;
+           twist.angular.y = 0;
+           twist.angular.z = rotation_speed;
+           if(kcf_voice_en==2)
+              ic.pub.publish(twist);
 
+           sensor_msgs::RegionOfInterest regionInterest;
+           regionInterest.x_offset=result.x;
+           regionInterest.y_offset=result.y;
+           regionInterest.height=result.height;
+           regionInterest.width=result.width;
 
-          sensor_msgs::RegionOfInterest regionInterest;
-          regionInterest.x_offset=result.x;
-          regionInterest.y_offset=result.y;
-          regionInterest.height=result.height;
-          regionInterest.width=result.width;
+           ic.pub1.publish(regionInterest);
 
-          ic.pub1.publish(regionInterest);
-}
-
-
-
-	  if (cvWaitKey(33) == 'q')
+           if (cvWaitKey(33) == 'q')
              break;
 	}
 
