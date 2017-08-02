@@ -93,6 +93,56 @@ void onMouse(int event, int x, int y, int, void*)
     }
 }
 
+void cacMoments(cv::Mat src)
+{
+	Mat srcGray;
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+        Mat temp;
+        src.convertTo(temp, CV_8UC1, 1.0 );
+	// 高斯滤波
+	GaussianBlur(temp, temp, Size(3, 3), 0.1, 0, BORDER_DEFAULT);
+	// 轮廓边界检测
+	findContours(temp, contours, hierarchy,
+		CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	// 计算轮廓矩
+	vector<Moments> mu(contours.size());
+         int max_area=0;
+	// 分析矩计算图像相关特征
+	for (int i = 0; i < (int)contours.size(); i++)
+	{
+
+		if ((int(contours.at(i).size())<200))
+		{
+			continue;
+		}
+		else
+		{
+			// 绘制矩形及椭圆
+			mu[i] = moments(contours[i], false);
+
+                        if((boundingRect(contours.at(i)).width>100)&&(boundingRect(contours.at(i)).height)>240)
+                        {
+
+				rectangle(src, boundingRect(contours.at(i)), cvScalar(255, 255, 255));
+                        }
+
+
+			int cx = mu[i].m10 / mu[i].m00;
+			int cy = mu[i].m01 / mu[i].m00;
+
+         
+			//cout << boundingRect(contours.at(i)).x << endl;;
+			//cout << boundingRect(contours.at(i)).y << endl;;
+			//cout << boundingRect(contours.at(i)).width << endl;;
+			//cout << boundingRect(contours.at(i)).height << endl;;
+			//cout << cx << "  " << cy << endl;
+		}
+    
+	}
+	cv::imshow("result", src);
+}
+
 //OpenCV貌似也没有获取矩形中心点的功能，还是自己写一个
 Point getCenterPoint(Rect rect)
 {
@@ -187,8 +237,8 @@ public:
     //OpenCV貌似也没有获取矩形中心点的功能，还是自己写一个
     Point centerRect=getCenterPoint(result);
 
-     cout<<"image center  x is "<< rgbimage.cols<<"image center  y is "<<rgbimage.rows<<endl;
-     cout<<"center point  x is "<< centerRect.x<<"center point  y is "<<centerRect.y<<endl;
+     //cout<<"image center  x is "<< rgbimage.cols<<"image center  y is "<<rgbimage.rows<<endl;
+    // cout<<"center point  x is "<< centerRect.x<<"center point  y is "<<centerRect.y<<endl;
 
    
 
@@ -203,6 +253,7 @@ public:
   	{
   		cv_ptr = cv_bridge::toCvCopy(msg,sensor_msgs::image_encodings::TYPE_32FC1);
   		cv_ptr->image.copyTo(depthimage);
+
   	}
   	catch (cv_bridge::Exception& e)
   	{
@@ -212,12 +263,20 @@ public:
        if(kcf_voice_en==2)
        {
  
+
+       }
+
+
+       
+       if(enable_get_depth)
+       {
+
           Mat dep;
-          depthimage.convertTo(dep, CV_8UC1, 1.0 );
+        //  depthimage.convertTo(dep, CV_8UC1, 1.0 );
           // 初始化阈值参数
-          const int maxVal = 5000;
-          int low_threshold  = 1500;
-          int high_threshold = 2000;
+          const int maxVal = 5.0;
+          float low_threshold  = 1.3;
+          float high_threshold = 1.8;
           cv::Mat dstTempImage1, dstTempImage2, dstImage;
          // 小阈值对源灰度图像进行阈值化操作
           cv::threshold( depthimage, dstTempImage1,low_threshold, maxVal, cv::THRESH_BINARY );
@@ -226,20 +285,16 @@ public:
          // 矩阵与运算得到二值化结果
           cv::bitwise_and( dstTempImage1, dstTempImage2, dep );
 
+         imshow("depth", dep);
+         cacMoments(dep);
+        
 
-          imshow("depth", dep);
-       }
-
-
-       
-       if(enable_get_depth)
-       {
          dist_val[0] = depthimage.at<float>(result.y+result.height/3 , result.x+result.width/3) ;
          dist_val[1] = depthimage.at<float>(result.y+result.height/3 , result.x+2*result.width/3) ;
          dist_val[2] = depthimage.at<float>(result.y+2*result.height/3 , result.x+result.width/3) ;
          dist_val[3] = depthimage.at<float>(result.y+2*result.height/3 , result.x+2*result.width/3) ;
          dist_val[4] = depthimage.at<float>(result.y+result.height/2 , result.x+result.width/2) ;
-
+      
          float distance = 0;
          int num_depth_points = 5;
          for(int i = 0; i < 5; i++)
@@ -250,6 +305,7 @@ public:
              num_depth_points--;
          }
          distance /= num_depth_points;
+   //  cout<<distance<<endl;
 
       //calculate linear speed
       if(distance > Min_distance)
@@ -273,7 +329,7 @@ public:
       else 
         rotation_speed = 0;
 
-      std::cout <<  "linear_speed = " << linear_speed << "  rotation_speed = " << rotation_speed << std::endl;
+      //std::cout <<  "linear_speed = " << linear_speed << "  rotation_speed = " << rotation_speed << std::endl;
 
       // std::cout <<  dist_val[0]  << " / " <<  dist_val[1] << " / " << dist_val[2] << " / " << dist_val[3] <<  " / " << dist_val[4] << std::endl;
       // std::cout <<  "distance = " << distance << std::endl;
