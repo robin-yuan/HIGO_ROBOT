@@ -224,7 +224,7 @@ public:
          int num_depth_points = 5;
          for(int i = 0; i < 5; i++)
          {
-           if(dist_val[i] > 0.4 && dist_val[i] < 10.0)
+           if(dist_val[i] > 1.5 && dist_val[i] < 4.5)
              distance += dist_val[i];
            else
              num_depth_points--;

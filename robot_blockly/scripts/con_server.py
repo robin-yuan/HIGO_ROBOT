@@ -113,7 +113,7 @@ class MyServerProtocol(WebSocketServerProtocol):
         command = payload.decode('utf8')
    
         self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
-        self.cmd_con_pub = rospy.Publisher('Rog_result',                                 String, queue_size=1)
+        self.cmd_con_pub = rospy.Publisher('/Rog_result',                                 String, queue_size=1)
 
 
 
