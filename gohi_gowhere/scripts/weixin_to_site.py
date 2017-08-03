@@ -28,7 +28,7 @@ class GoToPose():
 
         #subscribe the voice recognitive results
         rospy.Subscriber('/Rog_result', String, self.voice_command_callback)
-         #create a Rate object to sleep the process at 5 Hz
+        #create a Rate object to sleep the process at 5 Hz
         rate = rospy.Rate(5)
 
 

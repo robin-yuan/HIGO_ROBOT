@@ -112,7 +112,7 @@ Mat disp, disp8;
 void D_H()
 {
 	
- 	double L01=(8.0)/100;
+ 	double L01=(-28.0)/100;
 	double L12=(10.5)/100;
 	double L23=36.5/100;
 	double L34=3.0/100;
@@ -283,7 +283,7 @@ void stereo_match(int, void*)
 	disp.convertTo(disp8, CV_8U, 255 / ((numDisparities * 16 + 16)*16.));
 	reprojectImageTo3D(disp, xyz, Q, true); 
 	xyz = xyz * 16;
-        
+  /*      
        if(enSendDot==2)
        {
          enSendDot=0;
@@ -299,8 +299,9 @@ void stereo_match(int, void*)
 
             }
          }
-	 //autochoice(Point(roimsgs_.x, roimsgs_.y));
+	 autochoice(Point(roimsgs_.x, roimsgs_.y));
        }
+*/
        imshow("disparity", disp8);
 }
 
@@ -329,7 +330,7 @@ static void onMouse(int event, int x, int y, int, void*)
 		break;
 	case EVENT_LBUTTONUP:    //Êó±ê×ó°ŽÅ¥ÊÍ·ÅµÄÊÂŒþ
 		selectObject = false;
-		arm_voice_en=1;
+		arm_voice_en=2;
 		if (selection.width > 0 && selection.height > 0)
 			break;
 	}

@@ -143,7 +143,7 @@ void cacMoments(cv::Mat src)
                         selectRect.x = boundingRect(contours.at(i)).x;        
                         selectRect.y = boundingRect(contours.at(i)).y;
                         selectRect.width = boundingRect(contours.at(i)).width;   
-                        selectRect.height = boundingRect(contours.at(i)).height;
+                        selectRect.height = boundingRect(contours.at(i)).height/2;
 		}
     
 	}

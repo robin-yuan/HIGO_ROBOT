@@ -13,10 +13,16 @@ void commandCallBack(const geometry_msgs::Twist& command)
       ROS_WARN_STREAM("Keep .");
       
       visualization_msgs::InteractiveMarker taskspace_marker;
-      taskspace_marker.pose.orientation.w=0.8438757658004761;
-      taskspace_marker.pose.orientation.x=0.0013727728510275483;
-      taskspace_marker.pose.orientation.y=0.5365332961082458;
-      taskspace_marker.pose.orientation.z=-0.0021386106964200735;
+      //taskspace_marker.pose.orientation.w=0.8438757658004761;
+      //taskspace_marker.pose.orientation.x=0.0013727728510275483;
+      //taskspace_marker.pose.orientation.y=0.5365332961082458;
+      //taskspace_marker.pose.orientation.z=-0.0021386106964200735;
+
+
+      //taskspace_marker.pose.orientation.w=0.7204843759536743;
+      //taskspace_marker.pose.orientation.x=-0.005342945922166109;
+      //taskspace_marker.pose.orientation.y=0.6934410929679871;
+      //taskspace_marker.pose.orientation.z=0.0054045445285737514;
 
       taskspace_marker.pose.position.x=command.linear.x;
       taskspace_marker.pose.position.y=command.linear.y;
@@ -44,7 +50,7 @@ int main( int argc, char** argv )
   //--------------------------------------------------
   ros::Subscriber armCommandSubscriber = n.subscribe("/arm/pick", 10, commandCallBack);
         robot.setGripperJoint(80);
-        robot.setJoints({0, 0, 0, 0});
+        robot.setJoints({-0.9, 0.90, -0.90, 0.0});
       //  robot.setGripperJoint(100);
 
   //--------------------------------------------------
@@ -72,7 +78,7 @@ int main( int argc, char** argv )
       if (c == 'y' || c == 'Y')
       {
         robot.setGripperJoint(15);
-        robot.setJoints({0, 0, 0, 0});
+        robot.setJoints({-0.90, 0.90, -0.90, 0});
         robot.setGripperJoint(100);
       }
       else ROS_WARN_STREAM("Keep catching.");
@@ -81,11 +87,11 @@ int main( int argc, char** argv )
       {
         revCommandFlag=0;
 
-        //visualization_msgs::InteractiveMarker taskspace_marker;
-        //taskspace_marker.pose.orientation.w=0.7204843759536743;
-        //taskspace_marker.pose.orientation.x=-0.005342945922166109;
-       // taskspace_marker.pose.orientation.y=0.6934410929679871;
-        //taskspace_marker.pose.orientation.z=0.0054045445285737514;
+        visualization_msgs::InteractiveMarker taskspace_marker;
+        taskspace_marker.pose.orientation.w=0.7204843759536743;
+        taskspace_marker.pose.orientation.x=-0.005342945922166109;
+        taskspace_marker.pose.orientation.y=0.6934410929679871;
+        taskspace_marker.pose.orientation.z=0.0054045445285737514;
 
         robot.setEndeffectorPose(desired_ee,0.2,false,false);
       }
