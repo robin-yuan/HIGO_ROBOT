@@ -52,10 +52,12 @@ cv::Rect selectRect;
 cv::Point origin;
 cv::Rect result;
 
+
 bool select_flag = false;
 bool bRenewROI = false;  // the flag to enable the implementation of KCF algorithm for the new chosen ROI
 bool bBeginKCF = false;
 bool enable_get_depth = false;
+bool get_depth_flag   = false;
 
 bool HOG = true;
 bool FIXEDWINDOW = false;
@@ -63,6 +65,11 @@ bool MULTISCALE = true;
 bool SILENT = true;
 bool LAB = false;
 int kcf_voice_en=0;
+            // 初始化阈值参数
+const float         maxVal = 5.0;
+const float low_threshold  = 1.3;
+const float high_threshold = 1.8;
+
 
 // Create KCFTracker object
 KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
@@ -126,17 +133,17 @@ void cacMoments(cv::Mat src)
 
 				rectangle(src, boundingRect(contours.at(i)), cvScalar(255, 255, 255));
                         }
-
-
 			int cx = mu[i].m10 / mu[i].m00;
-			int cy = mu[i].m01 / mu[i].m00;
-
-         
+			int cy = mu[i].m01 / mu[i].m00;         
 			//cout << boundingRect(contours.at(i)).x << endl;;
 			//cout << boundingRect(contours.at(i)).y << endl;;
 			//cout << boundingRect(contours.at(i)).width << endl;;
 			//cout << boundingRect(contours.at(i)).height << endl;;
 			//cout << cx << "  " << cy << endl;
+                        selectRect.x = boundingRect(contours.at(i)).x;        
+                        selectRect.y = boundingRect(contours.at(i)).y;
+                        selectRect.width = boundingRect(contours.at(i)).width;   
+                        selectRect.height = boundingRect(contours.at(i)).height;
 		}
     
 	}
@@ -185,8 +192,12 @@ public:
     cv::destroyWindow(RGB_WINDOW);
     //cv::destroyWindow(DEPTH_WINDOW);
   }
-    void kcfVoiceCb( const std_msgs::String& msg)
-    {
+  void kcfVoiceCb( const std_msgs::String& msg)
+  {
+          if( msg.data =="人体识别" )
+          {
+              kcf_voice_en=1;
+          }          
           if( msg.data =="开始跟踪" )
           {
               kcf_voice_en=2;
@@ -195,7 +206,7 @@ public:
           {
               kcf_voice_en=0;
           }
-    }
+  }
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
     cv_bridge::CvImagePtr cv_ptr;
@@ -211,15 +222,10 @@ public:
 
     cv_ptr->image.copyTo(rgbimage);
 
-    cv::setMouseCallback(RGB_WINDOW, onMouse, 0);
+   // cv::setMouseCallback(RGB_WINDOW, onMouse, 0);
 
     if(bRenewROI)
     {
-        // if (selectRect.width <= 0 || selectRect.height <= 0)
-        // {
-        //     bRenewROI = false;
-        //     //continue;
-        // }
         tracker.init(selectRect, rgbimage);
         bBeginKCF = true;
         bRenewROI = false;
@@ -235,12 +241,10 @@ public:
     else
         cv::rectangle(rgbimage, selectRect, cv::Scalar(255, 0, 0), 2, 8, 0);
     //OpenCV貌似也没有获取矩形中心点的功能，还是自己写一个
-    Point centerRect=getCenterPoint(result);
+    //Point centerRect=getCenterPoint(result);
 
-     //cout<<"image center  x is "<< rgbimage.cols<<"image center  y is "<<rgbimage.rows<<endl;
+    //cout<<"image center  x is "<< rgbimage.cols<<"image center  y is "<<rgbimage.rows<<endl;
     // cout<<"center point  x is "<< centerRect.x<<"center point  y is "<<centerRect.y<<endl;
-
-   
 
     cv::imshow(RGB_WINDOW, rgbimage);
     cv::waitKey(1);
@@ -254,40 +258,18 @@ public:
   		cv_ptr = cv_bridge::toCvCopy(msg,sensor_msgs::image_encodings::TYPE_32FC1);
   		cv_ptr->image.copyTo(depthimage);
 
+                get_depth_flag=1;
   	}
   	catch (cv_bridge::Exception& e)
   	{
   		ROS_ERROR("Could not convert from '%s' to 'TYPE_32FC1'.", msg->encoding.c_str());
   	}
 
-       if(kcf_voice_en==2)
-       {
- 
-
-       }
 
 
        
        if(enable_get_depth)
        {
-
-          Mat dep;
-        //  depthimage.convertTo(dep, CV_8UC1, 1.0 );
-          // 初始化阈值参数
-          const int maxVal = 5.0;
-          float low_threshold  = 1.3;
-          float high_threshold = 1.8;
-          cv::Mat dstTempImage1, dstTempImage2, dstImage;
-         // 小阈值对源灰度图像进行阈值化操作
-          cv::threshold( depthimage, dstTempImage1,low_threshold, maxVal, cv::THRESH_BINARY );
-         // 大阈值对源灰度图像进行阈值化操作
-          cv::threshold( depthimage, dstTempImage2,high_threshold, maxVal,cv::THRESH_BINARY_INV );
-         // 矩阵与运算得到二值化结果
-          cv::bitwise_and( dstTempImage1, dstTempImage2, dep );
-
-         imshow("depth", dep);
-         cacMoments(dep);
-        
 
          dist_val[0] = depthimage.at<float>(result.y+result.height/3 , result.x+result.width/3) ;
          dist_val[1] = depthimage.at<float>(result.y+result.height/3 , result.x+2*result.width/3) ;
@@ -348,6 +330,30 @@ int main(int argc, char** argv)
 	{
 	  ros::spinOnce();
 
+
+          if(get_depth_flag==1)
+          {
+            get_depth_flag=0;
+       	    if(kcf_voice_en==1)//初始跟踪
+            {
+               kcf_voice_en=0;
+               Mat dep;
+
+               cv::Mat dstTempImage1, dstTempImage2, dstImage;
+               // 小阈值对源灰度图像进行阈值化操作
+               cv::threshold( depthimage, dstTempImage1,low_threshold, maxVal, cv::THRESH_BINARY );
+               // 大阈值对源灰度图像进行阈值化操作
+               cv::threshold( depthimage, dstTempImage2,high_threshold, maxVal,cv::THRESH_BINARY_INV );
+               // 矩阵与运算得到二值化结果
+               cv::bitwise_and( dstTempImage1, dstTempImage2, dep );
+               imshow("depth", dep);
+               cacMoments(dep);
+               bBeginKCF = false;  
+               bRenewROI = true;
+            }
+
+          }
+
            geometry_msgs::Twist twist;
            twist.linear.x = linear_speed;
            twist.linear.y = 0;
@@ -355,7 +361,7 @@ int main(int argc, char** argv)
            twist.angular.x = 0;
            twist.angular.y = 0;
            twist.angular.z = rotation_speed;
-           if(kcf_voice_en==2)
+           if(kcf_voice_en==2) //开始跟踪
               ic.pub.publish(twist);
 
            sensor_msgs::RegionOfInterest regionInterest;
