@@ -258,10 +258,12 @@ int main(int argc, char **argv)
 
   cv::startWindowThread();
   image_transport::ImageTransport it(nh);
-  image_transport::Subscriber sub =  it.subscribe("/camera/image/image_raw/left", 1, imageCallback);
-  image_transport::Subscriber sub1 = it.subscribe("/camera/image/image_raw/right", 1, imageCallback1);
-  ros::Subscriber camshiftRoiSubscriber =   nh.subscribe("/roi/left", 1, camshiftGetRoiCallBack);
+  image_transport::Subscriber sub =          it.subscribe("/camera/image/image_raw/left", 1, imageCallback);
+  image_transport::Subscriber sub1 =         it.subscribe("/camera/image/image_raw/right", 1, imageCallback1);
+  ros::Subscriber camshiftRoiSubscriber =    nh.subscribe("/roi/left", 1, camshiftGetRoiCallBack);
   ros::Subscriber camshiftRoiSubscriber1 =   nh.subscribe("/roi/right", 1, camshiftGetRoiCallBack1);
+  ros::Publisher  pub1=                      nh.advertise<std_msgs::String>("/static/roi",1000);
+
 
   while (nh.ok()) 
   {
@@ -279,14 +281,25 @@ int main(int argc, char **argv)
      if(rightFLAG)
      {
        rightFLAG=0;
-
-  
        cv::cvtColor(img1, img_out1, CV_BGR2GRAY);  
        cv::imshow(INPUT1, img1);
        //cv::imshow(OUTPUT1, img_out1);
-  
-        
      }
+    std_msgs::String static_msg;  
+    std::stringstream ss;
+    ss << "12" ;  
+    static_msg.data = ss.str();  
+
+    std_msgs::String static_msg1;  
+    std::stringstream ss1;  
+    ss1 << "34" ;  
+    static_msg1.data = ss1.str();  
+
+
+    if(onlyFirst==102) 
+         pub1.publish(static_msg);
+    else
+         pub1.publish(static_msg1);
 
      char key = cvWaitKey(30);
 

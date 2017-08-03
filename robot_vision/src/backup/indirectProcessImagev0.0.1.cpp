@@ -40,6 +40,7 @@ Eigen::MatrixXf camPose(4, 1);
 
 Rect    preroimsgs_;
 Rect    nowroimsgs_;
+int     onlyFirst=0;
 int     enSendDot=0;
 
 const int imageWidth = 640;                          
@@ -284,7 +285,7 @@ void stereo_match(int, void*)
 	reprojectImageTo3D(disp, xyz, Q, true); 
 	xyz = xyz * 16;
         
-       if(enSendDot==2)
+       if(enSendDot==1)
        {
          enSendDot=0;
          rectangle(disp8, roimsgs_, Scalar(255, 255, 255), 1, 8, 0);
@@ -351,11 +352,40 @@ void tiltStateCallBack(const dynamixel_msgs::JointState& state)
 
 
 void camshiftGetRoiCallBack(const sensor_msgs::RegionOfInterest& roimsgs )
-{       
+{
+       nowroimsgs_.x     =roimsgs.x_offset;
+       nowroimsgs_.y     =roimsgs.y_offset;
+       nowroimsgs_.width =roimsgs.width;
+       nowroimsgs_.height=roimsgs.height;
+
+       if((abs(nowroimsgs_.x-preroimsgs_.x)<10)&&
+         (abs(nowroimsgs_.y-preroimsgs_.y)<10)&&
+         (abs(nowroimsgs_.width-preroimsgs_.width)<10)&&
+         (abs(nowroimsgs_.height-preroimsgs_.height)<10))
+       {           
+         if(++onlyFirst>100)    
+         {             
+            enSendDot=1;
+            onlyFirst=0;
+            
             roimsgs_.x=roimsgs.x_offset;
             roimsgs_.y=roimsgs.y_offset;
             roimsgs_.width=roimsgs.width;
             roimsgs_.height=roimsgs.height;
+         }
+       }
+       else 
+       {
+      
+            onlyFirst=0;
+       }
+
+
+     preroimsgs_.x=nowroimsgs_.x;
+     preroimsgs_.y=nowroimsgs_.y;
+     preroimsgs_.width=nowroimsgs_.width;
+     preroimsgs_.height=nowroimsgs_.height;
+
 
    //   cout<<"the x  is "<<  roimsgs.x_offset <<endl;
    //   cout<<"the y  is "<<  roimsgs.y_offset <<endl;
@@ -388,19 +418,6 @@ void imageVoiceCb( const std_msgs::String& msg)
           }
 }
 
-void staticRoiCb( const std_msgs::String& msg)
-{
-          if( msg.data =="12" )
-          {
-              enSendDot=2;
-          }
-          if( msg.data =="34" )
-          {
-              enSendDot=0;
-          }
-}
-
-
 int main(int argc, char** argv)
 {
 	   ros::init(argc, argv, "image_processor");
@@ -414,8 +431,6 @@ int main(int argc, char** argv)
            ros::Subscriber  camshiftRoiSubscriber =   nh.subscribe("/roi/left", 1,               camshiftGetRoiCallBack);
            ros::Subscriber  camshiftRoiSubscriber1 =  nh.subscribe("/roi/right", 1,              camshiftGetRoiCallBack1);
            ros::Subscriber  pickVoiceSubscribe     =  nh.subscribe("/Rog_result",1,              imageVoiceCb); 
-           ros::Subscriber  staticRoiSubscribe     =  nh.subscribe("/static/roi",1,              staticRoiCb); 
-
 
 	   cv::Mat image,image1;
 	   cv::Mat frame,frame1;
@@ -508,7 +523,7 @@ int main(int argc, char** argv)
            arm_voice_en=0;
            pub1.publish(arm_pose_);
         }
-
+   // pub.publish(msg);
        char key = cvWaitKey(33);
        ros::spinOnce(); 
        }
