@@ -283,7 +283,7 @@ void stereo_match(int, void*)
 	disp.convertTo(disp8, CV_8U, 255 / ((numDisparities * 16 + 16)*16.));
 	reprojectImageTo3D(disp, xyz, Q, true); 
 	xyz = xyz * 16;
-  /*      
+        
        if(enSendDot==2)
        {
          enSendDot=0;
@@ -301,7 +301,7 @@ void stereo_match(int, void*)
          }
 	 autochoice(Point(roimsgs_.x, roimsgs_.y));
        }
-*/
+
        imshow("disparity", disp8);
 }
 
