@@ -43,16 +43,16 @@ void voiceCommandCallBack(const std_msgs::String& command)
 	{
                 voice_flag=1;
 
-      
-
 	}
-	else if(command.data.compare("再见") == 0)
+	if(command.data.compare("再见") == 0)
 	{
                 voice_flag=2;
-  	
-
-  	
-                
+ 
+	}
+	if(command.data.compare("停止机械臂") == 0)
+	{
+                voice_flag=3;
+    
 	}
 }
 
@@ -73,8 +73,8 @@ int main( int argc, char** argv )
   ros::Publisher  pub2= n.advertise<std_msgs::String>("/speak_string",1000);
 
   ros::Subscriber armCommandSubscriber = n.subscribe("/arm/pick", 10, commandCallBack);
-        robot.setGripperJoint(80);
-        robot.setJoints({-0.9, 0.90, -0.90, 0.0});
+  robot.setGripperJoint(80);
+  robot.setJoints({-0.90, 0.90, -1.20, 0.8});
       //  robot.setGripperJoint(100);
 
   //--------------------------------------------------
@@ -131,6 +131,19 @@ int main( int argc, char** argv )
   	 robot.setJoints({   0,1.5,    0,   0});  
          printf("bye arm action end\n"); 
       }
+      if(voice_flag==3)
+      {
+         voice_flag=0;     
+         robot.setGripperJoint(15);
+         robot.setJoints({-0.90, 0.90, -0.90, 0});
+         robot.setGripperJoint(100);
+
+         std_msgs::String static_msg;  
+         std::stringstream ss;
+         ss << "抓取完成" ;  
+         static_msg.data = ss.str();  
+         pub2.publish(static_msg);
+      }
       
       if(revCommandFlag==1)
       {
@@ -143,11 +156,7 @@ int main( int argc, char** argv )
         taskspace_marker.pose.orientation.z=0.0054045445285737514;
 
         robot.setEndeffectorPose(desired_ee,0.2,false,false);
-    std_msgs::String static_msg;  
-    std::stringstream ss;
-    ss << "抓取完成" ;  
-    static_msg.data = ss.str();  
-      pub2.publish(static_msg);
+
 
       }
    //   robot.publishInformationMarker();

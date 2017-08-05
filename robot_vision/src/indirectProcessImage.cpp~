@@ -112,7 +112,7 @@ Mat disp, disp8;
 void D_H()
 {
 	
- 	double L01=(-28.0)/100;
+ 	double L01=(-18.0)/100;
 	double L12=(10.5)/100;
 	double L23=36.5/100;
 	double L34=3.0/100;
@@ -243,23 +243,33 @@ void D_H()
 	
   	RTransform = T0P;
 	
-	cout << RTransform << endl;
+	//cout << RTransform << endl;
 }
 
 static void autochoice(Point temp)
 {
         Eigen::MatrixXf targetPose(4, 1);
-	cout << temp << "in world coordinate is: " << xyz.at<Vec3f>(temp) << endl;
+
 		
 	D_H();
 	camPose << xyz.at<Vec3f>(temp)[0] * 0.001, xyz.at<Vec3f>(temp)[1] * 0.001, xyz.at<Vec3f>(temp)[2] * 0.001, 1;
-	cout << camPose << endl;;
-        targetPose=RTransform*camPose;
-	cout << targetPose << endl;
+
+
+        if(camPose(2,0)!=160)
+        {
+	  cout << temp << "in world coordinate is: " << camPose << endl;
+	  //cout << camPose << endl;
+          targetPose=RTransform*camPose;
+	  cout << temp << "in world coordinate targetPose is: " << targetPose << endl;
+	  //cout << targetPose << endl;
 		
-	arm_pose_.linear.x= targetPose(0);
-	arm_pose_.linear.y= targetPose(1);
-	arm_pose_.linear.z= targetPose(2);
+	  arm_pose_.linear.x= targetPose(0);
+ 	  arm_pose_.linear.y= targetPose(1);
+	  arm_pose_.linear.z= targetPose(2);
+
+        } 
+
+
 }
 
 void stereo_match(int, void*)
@@ -295,11 +305,11 @@ void stereo_match(int, void*)
             for(int j=0;j< roimsgs_.height;j++)
             {
                  
-                 cout << p_t << "in world coordinate is: " << xyz.at<Vec3f>(p_t) << endl;
-
+                // cout << p_t << "in world coordinate is: " << xyz.at<Vec3f>(p_t) << endl;
+                
             }
          }
-	 autochoice(Point(roimsgs_.x, roimsgs_.y));
+         autochoice(Point(roimsgs_.x, roimsgs_.y));
        }
 
        imshow("disparity", disp8);
@@ -383,9 +393,9 @@ void imageVoiceCb( const std_msgs::String& msg)
           {
               arm_voice_en=2;
           }
-          if( msg.data =="停止机械臂" )
+          //if( msg.data =="停止机械臂" )
           {
-              arm_voice_en=0;
+             // arm_voice_en=0;
           }
 }
 

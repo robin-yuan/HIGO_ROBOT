@@ -35,7 +35,7 @@ class recoder_main():
                                     '客厅',
                                     '厨房',
                                     '充电',
-                                    '人体识别',
+                                    '初始跟踪',
                                     '启动机械臂',
                                     '停止机械臂',
                                     '开始跟踪',
@@ -70,7 +70,7 @@ class recoder_main():
     self.say.publish(command)
    elif command == '停止跟踪':
     self.say.publish(command)
-   elif command == '人体识别':
+   elif command == '初始跟踪':
     self.say.publish(command)
   else:
    pass
