@@ -6,6 +6,7 @@
 char getch(); // allow to capture keyboard inputs without blocking the program (we use this to disable and enable torque / relax)
 
 int revCommandFlag=0;
+int voice_flag=0;
 Eigen::Affine3d desired_ee;
 
 void commandCallBack(const geometry_msgs::Twist& command)
@@ -35,6 +36,26 @@ void commandCallBack(const geometry_msgs::Twist& command)
 
 }
 
+void voiceCommandCallBack(const std_msgs::String& command)
+{
+
+	if(command.data.compare("你好") == 0)
+	{
+                voice_flag=1;
+
+      
+
+	}
+	else if(command.data.compare("再见") == 0)
+	{
+                voice_flag=2;
+  	
+
+  	
+                
+	}
+}
+
 
 
 // =============== Main function =================
@@ -48,6 +69,9 @@ int main( int argc, char** argv )
   robot.initialize();
   robot.activateInteractiveJointControl();
   //--------------------------------------------------
+  ros::Subscriber voiceCommandArmSubscriber = n.subscribe("/Rog_result", 1000, voiceCommandCallBack);
+  ros::Publisher  pub2= n.advertise<std_msgs::String>("/speak_string",1000);
+
   ros::Subscriber armCommandSubscriber = n.subscribe("/arm/pick", 10, commandCallBack);
         robot.setGripperJoint(80);
         robot.setJoints({-0.9, 0.90, -0.90, 0.0});
@@ -82,6 +106,31 @@ int main( int argc, char** argv )
         robot.setGripperJoint(100);
       }
       else ROS_WARN_STREAM("Keep catching.");
+
+
+      if(voice_flag==1)
+      {
+         voice_flag=0;
+  	 robot.initialize();                                                         
+         robot.setJoints({0, -0.8, -1.5, 0.8});                //input hello while output certain actions              
+	 robot.setJoints({0, -0.2, -0.2, 0.2});
+         robot.setJoints({0, -0.8, -1.5, 0.8});
+         robot.setJoints({0, -0.2, -0.2, 0.2});
+         robot.setJoints({0, -0.8, -1.5, 0.8});
+         robot.setJoints({0,  1.5,    0,   0});
+         printf("hello arm action end\n");
+      }
+      if(voice_flag==2)
+      {
+         voice_flag=0;     
+         robot.initialize();                                                         
+	 robot.setJoints({   0,  0, -1.8, 0.5});               //input goodbye while output certain actions
+  	 robot.setJoints({ 0.8,  0, -1.8, 0.5});
+  	 robot.setJoints({-0.8,  0, -1.8, 0.5});
+  	 robot.setJoints({ 0.8,  0, -1.8, 0.5});
+  	 robot.setJoints({   0,1.5,    0,   0});  
+         printf("bye arm action end\n"); 
+      }
       
       if(revCommandFlag==1)
       {
@@ -94,6 +143,12 @@ int main( int argc, char** argv )
         taskspace_marker.pose.orientation.z=0.0054045445285737514;
 
         robot.setEndeffectorPose(desired_ee,0.2,false,false);
+      std_msgs::String static_msg;  
+      std::stringstream ss;
+      ss << "抓取完成" ;  
+      static_msg.data = ss.str();  
+      pub2.publish(static_msg);
+
       }
    //   robot.publishInformationMarker();
       ros::spinOnce();

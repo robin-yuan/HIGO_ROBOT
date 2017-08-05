@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <dirent.h>
+#include <math.h>
 
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
@@ -12,24 +13,37 @@
 
 #include "geometry_msgs/Twist.h"
 #include "std_msgs/String.h"
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include "kcftracker.hpp"
+  
+
 
 static const std::string RGB_WINDOW = "RGB Image window";
 //static const std::string DEPTH_WINDOW = "DEPTH Image window";
 
-#define Max_linear_speed 0.6
-#define Min_linear_speed 0.4
-#define Min_distance 1.5
-#define Max_distance 5.0
-#define Max_rotation_speed 0.75
 
 using namespace cv;
 using namespace std;
+ // 初始化阈值参数
+
+#define distance_offset    0.5
+#define Max_linear_speed   0.5
+#define Min_linear_speed   0.2
+#define Min_distance       1.3
+#define low_threshold      1.3
+#define high_threshold     1.8
+#define Max_distance       3.0
+#define Max_rotation_speed 0.75
+
 
 float linear_speed = 0;
 float rotation_speed = 0;
@@ -37,12 +51,12 @@ float rotation_speed = 0;
 float k_linear_speed = (Max_linear_speed - Min_linear_speed) / (Max_distance - Min_distance);
 float h_linear_speed = Min_linear_speed - k_linear_speed * Min_distance;
 
-float k_rotation_speed = 0.004;
-float h_rotation_speed_left = 1.2;
+float k_rotation_speed       = 0.004;
+float h_rotation_speed_left  = 1.2;
 float h_rotation_speed_right = 1.36;
  
-int ERROR_OFFSET_X_left1 = 100;
-int ERROR_OFFSET_X_left2 = 300;
+int ERROR_OFFSET_X_left1  = 100;
+int ERROR_OFFSET_X_left2  = 300;
 int ERROR_OFFSET_X_right1 = 340;
 int ERROR_OFFSET_X_right2 = 540;
 
@@ -65,10 +79,7 @@ bool MULTISCALE = true;
 bool SILENT = true;
 bool LAB = false;
 int kcf_voice_en=0;
-            // 初始化阈值参数
-const float         maxVal = 5.0;
-const float low_threshold  = 1.3;
-const float high_threshold = 1.8;
+
 
 
 // Create KCFTracker object
@@ -169,7 +180,9 @@ class ImageConverter
 public:
   ros::Publisher pub;
   ros::Publisher pub1;
+  ros::Publisher pub2;
   ros::Subscriber sub1;
+
 
 
   ImageConverter()
@@ -181,7 +194,9 @@ public:
     pub = nh_.advertise<geometry_msgs::Twist>("/mobile_base/mobile_base_controller/cmd_vel", 1000);
     //publish /kcf/roi
     pub1= nh_.advertise<sensor_msgs::RegionOfInterest>("/kcf/roi", 1000);
-    sub1=nh_.subscribe("/Rog_result",1,&ImageConverter::kcfVoiceCb, this);
+    sub1= nh_.subscribe("/Rog_result",1,&ImageConverter::kcfVoiceCb, this);
+
+    pub2= nh_.advertise<std_msgs::String>("/speak_string",1000);
 
     cv::namedWindow(RGB_WINDOW);
     //cv::namedWindow(DEPTH_WINDOW);
@@ -281,35 +296,83 @@ public:
          int num_depth_points = 5;
          for(int i = 0; i < 5; i++)
          {
-           if(dist_val[i] > 1.5 && dist_val[i] < 4.5)
+           if(dist_val[i] >Min_distance && dist_val[i] < Max_distance)
              distance += dist_val[i];
            else
              num_depth_points--;
          }
          distance /= num_depth_points;
    //  cout<<distance<<endl;
-
-      //calculate linear speed
-      if(distance > Min_distance)
-        linear_speed = distance * k_linear_speed + h_linear_speed;
-      else
-        linear_speed = 0;
-
-      if(linear_speed > Max_linear_speed)
-        linear_speed = Max_linear_speed;
-
+//----------------------------------------------------------------------------------------------------
       //calculate rotation speed
       int center_x = result.x + result.width/2;
-      if(center_x < ERROR_OFFSET_X_left1) 
-        rotation_speed =  Max_rotation_speed;
-      else if(center_x > ERROR_OFFSET_X_left1 && center_x < ERROR_OFFSET_X_left2)
-        rotation_speed = -k_rotation_speed * center_x + h_rotation_speed_left;
-      else if(center_x > ERROR_OFFSET_X_right1 && center_x < ERROR_OFFSET_X_right2)
-        rotation_speed = -k_rotation_speed * center_x + h_rotation_speed_right;
-      else if(center_x > ERROR_OFFSET_X_right2)
-        rotation_speed = -Max_rotation_speed;
+
+         std_msgs::String static_msg;  
+         std::stringstream ss;
+
+      if(distance< Min_distance-distance_offset )
+      {
+          linear_speed = 0;
+          rotation_speed = 0;
+
+          ss << "您距离太近了,我不走了" ;  
+          static_msg.data = ss.str();  
+          pub2.publish(static_msg);
+      }
+      else if( distance< Max_distance)
+      {
+          if(distance <Min_distance)  linear_speed = (-1.0)*distance * k_linear_speed + h_linear_speed;
+          else                        linear_speed =        distance * k_linear_speed + h_linear_speed;
+
+          if(center_x < ERROR_OFFSET_X_left1)         
+          {
+           rotation_speed =  Max_rotation_speed;
+          // pub2.publish("即将偏离目标");
+          ss << "即将偏离目标" ;  
+          static_msg.data = ss.str();  
+          pub2.publish(static_msg);
+          }
+          else if(center_x > ERROR_OFFSET_X_left1 && center_x < ERROR_OFFSET_X_left2)
+          {
+           rotation_speed = -k_rotation_speed * center_x + h_rotation_speed_left;
+          }        
+          else if(center_x > ERROR_OFFSET_X_right1 && center_x < ERROR_OFFSET_X_right2)        
+          {
+           rotation_speed = -k_rotation_speed * center_x + h_rotation_speed_right;
+          }
+          else if(center_x > ERROR_OFFSET_X_right2)
+          {
+           rotation_speed = -Max_rotation_speed;
+          // pub2.publish("即将偏离目标");
+          ss << "即将偏离目标" ;  
+          static_msg.data = ss.str();  
+          pub2.publish(static_msg);
+          }        
+          else  
+          {
+            rotation_speed = 0;
+           // pub2.publish("目标已经丢失");
+          ss << "目标已经丢失" ;  
+          static_msg.data = ss.str();  
+          pub2.publish(static_msg);
+          }
+
+      }
       else 
-        rotation_speed = 0;
+      {
+          linear_speed = 0;//在深度超过最大值的时候，停止机器人、语音提示丢失目标
+          rotation_speed = 0;
+          ss << "您走的太快了,我不走了" ;  
+          static_msg.data = ss.str();  
+          pub2.publish(static_msg);
+         // pub2.publish("您走的太快了,我不走了");
+      }
+    
+
+      if(fabs(linear_speed) > Max_linear_speed)
+        linear_speed = Max_linear_speed;
+//----------------------------------------------------------------------------------------------------
+
 
       //std::cout <<  "linear_speed = " << linear_speed << "  rotation_speed = " << rotation_speed << std::endl;
 
@@ -341,9 +404,9 @@ int main(int argc, char** argv)
 
                cv::Mat dstTempImage1, dstTempImage2, dstImage;
                // 小阈值对源灰度图像进行阈值化操作
-               cv::threshold( depthimage, dstTempImage1,low_threshold, maxVal, cv::THRESH_BINARY );
+               cv::threshold( depthimage, dstTempImage1,low_threshold, Max_distance , cv::THRESH_BINARY );
                // 大阈值对源灰度图像进行阈值化操作
-               cv::threshold( depthimage, dstTempImage2,high_threshold, maxVal,cv::THRESH_BINARY_INV );
+               cv::threshold( depthimage, dstTempImage2,high_threshold, Max_distance ,cv::THRESH_BINARY_INV );
                // 矩阵与运算得到二值化结果
                cv::bitwise_and( dstTempImage1, dstTempImage2, dep );
                imshow("depth", dep);
