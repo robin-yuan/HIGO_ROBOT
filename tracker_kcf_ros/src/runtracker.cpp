@@ -310,13 +310,7 @@ public:
 
          std_msgs::String static_msg;  
          std::stringstream ss;
-
-       if( distance< Max_distance)
-       {
-          if(distance <Min_distance)  linear_speed = (-1.0)*distance * k_linear_speed + h_linear_speed;
-          else                        linear_speed =        distance * k_linear_speed + h_linear_speed;
-
-          if(center_x < ERROR_OFFSET_X_left1)         
+         if(center_x < ERROR_OFFSET_X_left1)         
           {
             rotation_speed =  Max_rotation_speed;
             ss << "即将偏离目标" ;  
@@ -343,7 +337,10 @@ public:
           {
              rotation_speed = 0;
           }
-
+       if( distance< Max_distance)
+       {
+          if(distance <Min_distance)  linear_speed = (-1.0)*distance * k_linear_speed + h_linear_speed;
+          else                        linear_speed =        distance * k_linear_speed + h_linear_speed;
       }
       else 
       {

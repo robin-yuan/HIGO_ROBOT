@@ -112,23 +112,23 @@ int main( int argc, char** argv )
       {
          voice_flag=0;
   	 robot.initialize();                                                         
-         robot.setJoints({0, -0.8, -1.5, 0.8});                //input hello while output certain actions              
-	 robot.setJoints({0, -0.2, -0.2, 0.2});
-         robot.setJoints({0, -0.8, -1.5, 0.8});
-         robot.setJoints({0, -0.2, -0.2, 0.2});
-         robot.setJoints({0, -0.8, -1.5, 0.8});
-         robot.setJoints({0,  1.5,    0,   0});
+         robot.setJoints({-0.90, 0.90, -0.90, 0});                //input hello while output certain actions              
+	 robot.setJoints({-0.90, 1.3, -0.90, 0});
+         robot.setJoints({-0.90, 0.90, -0.90, 0});
+         robot.setJoints({-0.90, 1.3, -0.90, 0});
+         robot.setJoints({-0.90, 0.90, -0.90, 0});
+         
          printf("hello arm action end\n");
       }
       if(voice_flag==2)
       {
          voice_flag=0;     
          robot.initialize();                                                         
-	 robot.setJoints({   0,  0, -1.8, 0.5});               //input goodbye while output certain actions
-  	 robot.setJoints({ 0.8,  0, -1.8, 0.5});
-  	 robot.setJoints({-0.8,  0, -1.8, 0.5});
-  	 robot.setJoints({ 0.8,  0, -1.8, 0.5});
-  	 robot.setJoints({   0,1.5,    0,   0});  
+	 robot.setJoints({0.90, 0.90, -0.90, 0});               //input goodbye while output certain actions
+  	 robot.setJoints({0.90, 1.3, -0.90, 0});
+         robot.setJoints({0.90, 0.90, -0.90, 0});
+         robot.setJoints({0.90, 1.3, -0.90, 0});
+         robot.setJoints({-0.90, 0.90, -0.90, 0});
          printf("bye arm action end\n"); 
       }
       if(voice_flag==3)

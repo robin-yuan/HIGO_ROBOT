@@ -28,7 +28,7 @@ class GoToPose():
 
         #subscribe the voice recognitive results
         rospy.Subscriber('/Rog_result', String, self.voice_command_callback)
-         #create a Rate object to sleep the process at 5 Hz
+        #create a Rate object to sleep the process at 5 Hz
         rate = rospy.Rate(5)
 
 
@@ -98,13 +98,13 @@ class GoToPose():
         command = msg.data
         if (command in self.commands):
             if command == '厨房':
-               position = {'x': 0.66, 'y' : -1.39}
+               position = {'x': -2.88, 'y' : 11.0}
                quaternion = {'r1' : 0.000, 'r2' : 0.000, 'r3' : 0.000, 'r4' : 1.000}
             elif command == '客厅':
-               position = {'x': 2.16, 'y' : -2.86}
+               position = {'x': -7.41, 'y' : 5.69}
                quaternion = {'r1' : 0.000, 'r2' : 0.000, 'r3' : 0.000, 'r4' : 1.000}
             elif command == '充电':
-               position = {'x': 2.16, 'y' : -2.86}
+               position = {'x': -3.51, 'y' : 0.0225}
                quaternion = {'r1' : 0.000, 'r2' : 0.000, 'r3' : 0.000, 'r4' : 1.000}
 	    print ("the site is"+command)    
             navigator.go_to_process(position,quaternion)	
