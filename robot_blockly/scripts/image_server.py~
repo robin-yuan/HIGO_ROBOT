@@ -30,7 +30,7 @@ VERBOSE=True
 import copy
 
 mutex = Lock()
-topic_name = "/usb_cam/image_raw/compressed"
+topic_name = "/camera/rgb/image_raw/compressed"
 class web_video_server:
 
     def __init__(self):
