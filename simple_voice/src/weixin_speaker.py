@@ -39,7 +39,9 @@ class recoder_main():
                                     '启动机械臂',
                                     '停止机械臂',
                                     '开始跟踪',
-                                    '停止跟踪'
+                                    '停止跟踪',
+                                    '你好',
+                                    '再见'
                                     ]
   
  def talker(self,data):
@@ -71,6 +73,10 @@ class recoder_main():
    elif command == '停止跟踪':
     self.say.publish(command)
    elif command == '初始跟踪':
+    self.say.publish(command)
+   elif command == '你好':
+    self.say.publish(command)
+   elif command == '再见':
     self.say.publish(command)
   else:
    pass

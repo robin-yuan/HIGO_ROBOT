@@ -30,7 +30,7 @@ VERBOSE=True
 import copy
 
 mutex = Lock()
-topic_name = "/camera/rgb/image_raw/compressed"
+topic_name = "/camera/rgb/image_raw"
 class web_video_server:
 
     def __init__(self):
@@ -56,44 +56,44 @@ class web_video_server:
 class MyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            self.path=re.sub('[^.a-zA-Z0-9]', "",str(self.path))
-            print self.path           
+            #self.path=re.sub('[^.a-zA-Z0-9]', "",str(self.path))
             #if self.path=="" or self.path==None or self.path[:1]==".":
-               # return
-  
-            if self.path.endswith(".html"):
-                f = open(curdir + sep + self.path)
-                self.send_response(200)
-                self.send_header('Content-type',    'text/html')
-                self.end_headers()
-                self.wfile.write(f.read())
-                f.close()
-                return
-            if self.path.endswith(".mjpeg"):
-                self.send_response(200)
-                self.wfile.write("Content-Type: multipart/x-mixed-replace; boundary=--aaboundary")
-                self.wfile.write("\r\n\r\n")
-                while 1:
-                  JpegData=self.ic.getCompressedImage();                    
-                  self.wfile.write("--aaboundary\r\n")
-                  self.wfile.write("Content-Type: image/jpeg\r\n")
-                  self.wfile.write("Content-length: "+str(len(JpegData))+"\r\n\r\n" )
-                  self.wfile.write(JpegData)
-                  self.wfile.write("\r\n\r\n\r\n")    
-                  time.sleep(0.05)
-                return
-            if self.path.endswith("*.jpg"):
-                self.send_response(200)
-                self.wfile.write("Content-Type: multipart/x-mixed-replace; boundary=--aaboundary")
-                self.wfile.write("\r\n\r\n")
-                JpegData=self.ic.getCompressedImage();
-                self.wfile.write("--aaboundary\r\n")
-                self.wfile.write("Content-Type: image/jpeg\r\n")
-                self.wfile.write("Content-length: "+str(len(JpegData))+"\r\n\r\n" )
-                self.wfile.write(JpegData)
-                self.wfile.write("\r\n\r\n\r\n")
-                return
+            #    return
+            #if self.path.endswith(".html"):
+            #    f = open(curdir + sep + self.path)
+            #    self.send_response(200)
+            #    self.send_header('Content-type',    'text/html')
+            #    self.end_headers()
+            #    self.wfile.write(f.read())
+            #    f.close()
+            #    return
+            #if self.path.endswith(".mjpeg"):
+            #    self.send_response(200)
+            #    self.wfile.write("Content-Type: multipart/x-mixed-replace; boundary=--aaboundary")
+            #    self.wfile.write("\r\n\r\n")
+            #    while 1:
+            #      JpegData=self.ic.getCompressedImage();                    
+            #      self.wfile.write("--aaboundary\r\n")
+            #      self.wfile.write("Content-Type: image/jpeg\r\n")
+            #      self.wfile.write("Content-length: "+str(len(JpegData))+"\r\n\r\n" )
+            #      self.wfile.write(JpegData)
+            #      self.wfile.write("\r\n\r\n\r\n")    
+            #      time.sleep(0.05)
+            #    return
+            
+            
+            #if self.path.endswith("*.jpg"):
+            self.send_response(200)
+            self.wfile.write("Content-Type: multipart/x-mixed-replace; boundary=--aaboundary")
+            self.wfile.write("\r\n\r\n")
+            JpegData=self.ic.getCompressedImage();
+            self.wfile.write("--aaboundary\r\n")
+            self.wfile.write("Content-Type: image/jpg\r\n")
+            self.wfile.write("Content-length: "+str(len(JpegData))+"\r\n\r\n" )
+            self.wfile.write(JpegData)
+            self.wfile.write("\r\n\r\n\r\n")
             return
+            #return
         except IOError:
             self.send_error(404,'File Not Found: %s' % self.path)
         except :
@@ -105,7 +105,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 def main_server(args, ic):
     try:
         MyHandler.ic = ic
-        server = ThreadedHTTPServer(('0.0.0.0', 8080), MyHandler)
+        server = ThreadedHTTPServer(('', 8080), MyHandler)
         print 'started httpserver...'
         server.serve_forever()
     except KeyboardInterrupt:

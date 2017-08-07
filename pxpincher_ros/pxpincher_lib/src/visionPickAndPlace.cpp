@@ -112,7 +112,7 @@ int main( int argc, char** argv )
       {
          voice_flag=0;
   	 robot.initialize();                                                         
-         robot.setJoints({-0.90, 0.90, -0.90, 0});                //input hello while output certain actions              
+         robot.setJoints({-0.90, 0.90, -0.90,0});             //input hello while output certain actions              
 	 robot.setJoints({-0.90, 1.3, -0.90, 0});
          robot.setJoints({-0.90, 0.90, -0.90, 0});
          robot.setJoints({-0.90, 1.3, -0.90, 0});
