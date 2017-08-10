@@ -20,10 +20,10 @@ class GoToPose():
 	#rospy.on_shutdown(self.shutdown)
 
         #we consider the following simple commands, which you can extend on your own
-        self.commands =             ['充电',
-                                    '厨房',
-                                    '客厅'
-                                    ]
+        self.commands =  [                '充电',
+                                          '厨房',
+                                          '客厅'
+                                         ]
         rospy.loginfo("Ready to receive voice commands")#$#######
 
         #subscribe the voice recognitive results
@@ -72,25 +72,6 @@ class GoToPose():
             self.move_base.cancel_goal()
         rospy.loginfo("Stop")
         rospy.sleep(1)
-
-    def go_to_process(self, pos, quat):
-        # Customize the following values so they are appropriate for your location
-        success = navigator.goto(pos, quat)
-        if success:
-             if command == '客厅':
-   	          self.say.publish('到达目的地客厅')
-             elif command == '厨房':
-                  self.say.publish('到达目的地厨房')
-             elif command == '充电':
-                  self.say.publish('到达充电桩')
-             rospy.loginfo("HIGO, reached the desired pose")
-
-        else:
-           rospy.loginfo("The base failed to reach the desired pose")
-
-        # Sleep to give the last log messages time to be sent
-        rospy.sleep(1)
-
         
 
     def voice_command_callback(self, msg):
@@ -98,16 +79,33 @@ class GoToPose():
         command = msg.data
         if (command in self.commands):
             if command == '厨房':
-               position = {'x': -2.88, 'y' : 11.0}
+               position = {'x': 1.36, 'y' : 2.37}
                quaternion = {'r1' : 0.000, 'r2' : 0.000, 'r3' : 0.000, 'r4' : 1.000}
             elif command == '客厅':
-               position = {'x': -7.41, 'y' : 5.69}
+               position = {'x': 1.2, 'y' : -2.22}
                quaternion = {'r1' : 0.000, 'r2' : 0.000, 'r3' : 0.000, 'r4' : 1.000}
             elif command == '充电':
-               position = {'x': -3.51, 'y' : 0.0225}
+               position = {'x': -0.366, 'y' : 1.07}
                quaternion = {'r1' : 0.000, 'r2' : 0.000, 'r3' : 0.000, 'r4' : 1.000}
 	    print ("the site is"+command)    
-            navigator.go_to_process(position,quaternion)	
+
+
+            success = navigator.goto(position, quaternion)
+            if success:
+               if command == '客厅':
+   	          self.say.publish('到达目的地客厅')
+               elif command == '厨房':
+                  self.say.publish('到达目的地厨房')
+               elif command == '充电':
+                  self.say.publish('到达充电桩')
+               rospy.loginfo("HIGO, reached the desired pose")
+
+            else:
+               rospy.loginfo("The base failed to reach the desired pose")
+
+          # Sleep to give the last log messages time to be sent
+        rospy.sleep(1)
+
 
 
 if __name__ == '__main__':

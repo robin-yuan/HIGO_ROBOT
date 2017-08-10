@@ -11,7 +11,7 @@
     <include file="$(find gohi_gowhere)/launch/weixin_to_specific_point.launch" /> 
     <include file="$(find tracker_kcf_ros)/launch/gohi_all_kcf.launch" />
 
-    <include file="$(find robot_blockly)/launch/con_server.launch" />
+    <include file="$(find robot_blockly)/launch/con_odom_ack_server.launch" />
     <include file="$(find simple_voice)/launch/weixin_speaker.launch"   /> 
 <!-- Launch the odom        
 

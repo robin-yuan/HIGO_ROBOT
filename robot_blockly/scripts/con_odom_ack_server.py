@@ -21,6 +21,13 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 
 
+import rospy
+import actionlib
+from actionlib_msgs.msg import *
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Pose, PoseWithCovarianceStamped, Point, Quaternion, Twist
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+
 
 ID = '/rosnode'
 
@@ -107,7 +114,10 @@ class MyServerProtocol(WebSocketServerProtocol):
     def onOpen(self):
         buf=""
         print("WebSocket connection open.")
-        rospy.Subscriber('/upload_to_weixin', String, self.upload_msg_callback)
+        #rospy.Subscriber('/upload_to_weixin', String, self.upload_msg_callback)
+        rospy.Subscriber('/mobile_base/mobile_base_controller/odom', Odometry, self.upload_odom_callback)
+        #rospy.Subscriber('/odom', Odometry, self.upload_odom_callback)
+        robot_odom=Odometry()
         
      # 收到消息后的处理函数，其中isbinary指示是字符串形式还是二进制  
     def onMessage(self, payload, isBinary):
@@ -121,8 +131,6 @@ class MyServerProtocol(WebSocketServerProtocol):
    
         self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
         self.cmd_con_pub = rospy.Publisher('Rog_result',                                 String, queue_size=1)
-
-
 
         # Initialize the Twist message we will publish.
         self.cmd_vel = Twist()
@@ -151,11 +159,25 @@ class MyServerProtocol(WebSocketServerProtocol):
 
 
 
-    def upload_msg_callback(self, msg):
+ #   def upload_msg_callback(self, msg):
         # Get the motion command from the recognized phrase
-        command = msg.data
-        print("the site is"+command)  
-        self.sendMessage(command.encode("UTF-8") )       
+#        command = msg.data
+#        print("the site is"+command)  
+#        self.sendMessage(command.encode("UTF-8") )       
+
+
+    def upload_odom_callback(self, robot_odom):
+        # Get the motion command from the recognized phrase
+       
+        print("the pose x is"+str(robot_odom.pose.pose.position.x))
+        print("the pose y is"+str(robot_odom.pose.pose.position.y))
+
+
+        robot_site_x = str(robot_odom.pose.pose.position.x)
+        robot_site_y = str(robot_odom.pose.pose.position.y)
+
+        self.sendMessage(('0'+','+robot_site_x+','+robot_site_y).encode("UTF-8") )
+
 
     def onClose(self, wasClean, code, reason):
         print("WebSocket connection closed: {0}".format(reason))
