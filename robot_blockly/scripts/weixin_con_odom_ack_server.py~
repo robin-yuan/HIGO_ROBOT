@@ -36,37 +36,11 @@ class aaa():
         rospy.init_node('weixin_teleop')
         # Publish the Twist message to the cmd_vel topic
            
-        #subscribe the voice recognitive results
-
-
         #create a Rate object to sleep the process at 5 Hz
         rate = rospy.Rate(5)
         
-        # Initialize the Twist message we will publish.
-        self.cmd_vel = Twist()
-        #make sure to make the robot stop by default
-        self.cmd_vel.linear.x=0;
-        self.cmd_vel.angular.z=0;
-        
-        
         # A mapping from keywords or phrases to commands
-        #we consider the following simple commands, which you can extend on your own
-        self.commands =            ['停止',
-                                    '前进',
-                                    '后退',
-                                    '左转',
-                                    '右转',
-                                    '客厅',
-                                    '厨房',
-                                    '充电',
-                                    '红色',
-                                    '绿色',
-                                    '蓝色',
-                                    '启动机械臂',
-                                    '停止机械臂',
-                                    '开始跟踪',
-                                    '停止跟踪'
-                                    ]
+ 
         rospy.loginfo("Ready to receive weixin commands")
 
 
@@ -107,7 +81,7 @@ def sumStartToEnd(start,end):
 
 
 def rosnode_listnodes(namespace=None, list_uri=False, list_all=False):
-    nodes_vector = _sub_rosnode_listnodes(namespace=namespace, list_uri=list_uri, list_all=list_all);
+    nodes_vector = _sub_rosnode_listnodes(namespace=namespace, list_uri=list_uri, list_all=list_all)
     return nodes_vector
 
 class MyServerProtocol(WebSocketServerProtocol):
@@ -115,12 +89,43 @@ class MyServerProtocol(WebSocketServerProtocol):
         print("Client connecting: {0}".format(request.peer))
 
     def onOpen(self):
-        buf=""
+
+       #we consider the following simple commands, which you can extend on your own
+        self.commands =            ['停止',
+                                    '前进',
+                                    '后退',
+                                    '左转',
+                                    '右转',
+                                    '客厅',
+                                    '厨房',
+                                    '充电',
+                                    '红色',
+                                    '绿色',
+                                    '蓝色',
+                                    '启动机械臂',
+                                    '停止机械臂',
+                                    '开始跟踪',
+                                    '停止跟踪'
+                                    ]
         print("WebSocket connection open.")
-        #rospy.Subscriber('/upload_to_weixin', String, self.upload_msg_callback)
+        rospy.Subscriber('/upload_to_weixin', String, self.upload_msg_callback)
+
         #rospy.Subscriber('/mobile_base/mobile_base_controller/odom', Odometry, self.upload_odom_callback)
         rospy.Subscriber('/odom', Odometry, self.upload_odom_callback)
+        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
+        self.cmd_con_pub = rospy.Publisher('Rog_result',                                 String, queue_size=1)
         robot_odom=Odometry()
+        self.enable_path=0
+        # range is -10m~10m
+        self.odom_shift=10 
+        # precision 10 is dm ,1m=10dm
+        # precision 100 is cm ,1m=100cm
+        self.odom_precision=100
+        #max range (0~20)*100
+        self.max_range=2000
+        self.pix_range=350
+
+
         
      # 收到消息后的处理函数，其中isbinary指示是字符串形式还是二进制  
     def onMessage(self, payload, isBinary):
@@ -132,57 +137,72 @@ class MyServerProtocol(WebSocketServerProtocol):
         #self.sendMessage(payload, isBinary)
         command = payload.decode('utf8')
    
-        self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
-        self.cmd_con_pub = rospy.Publisher('Rog_result',                                 String, queue_size=1)
-
         # Initialize the Twist message we will publish.
         self.cmd_vel = Twist()
-        self.send_str=""
-        if   command == '前进':
+        if (command in self.commands):
+           if   command == '前进':
                 self.cmd_vel.linear.x =   0.2
                 self.cmd_vel.angular.z =  0.0
-        elif command == '后退':
+                self.cmd_vel_pub.publish(self.cmd_vel)  
+           elif command == '后退':
                 self.cmd_vel.linear.x =  -0.2
                 self.cmd_vel.angular.z =  0.0
-        elif command == '左转':
+                self.cmd_vel_pub.publish(self.cmd_vel)  
+           elif command == '左转':
                 self.cmd_vel.linear.x =   0.0
                 self.cmd_vel.angular.z =  1.0
-        elif command == '右转':
+                self.cmd_vel_pub.publish(self.cmd_vel)  
+           elif command == '右转':
                 self.cmd_vel.linear.x =   0.0
                 self.cmd_vel.angular.z = -1.0
-        elif command == '停止':
+                self.cmd_vel_pub.publish(self.cmd_vel)  
+           elif command == '停止':
                 self.cmd_vel.linear.x =   0.0
                 self.cmd_vel.angular.z =  0.0
-        else :
+                self.cmd_vel_pub.publish(self.cmd_vel)  
+           elif command == '厨房':
+                self.enable_path=1
+           elif command == '客厅':
+                self.enable_path=2
+           elif command == '充电':
+                self.enable_path=3
+           else :
                 print(command)
-                
-        self.cmd_vel_pub.publish(self.cmd_vel)  
+                self.enable_path=0
+        else:
+           pass             
+        
         self.cmd_con_pub.publish(command)  
         self.sendMessage(payload, isBinary)
 
 
 
- #   def upload_msg_callback(self, msg):
+    def upload_msg_callback(self, msg):
         # Get the motion command from the recognized phrase
-#        command = msg.data
-#        print("the site is"+command)  
-#        self.sendMessage(command.encode("UTF-8") )       
+        command = msg.data
+        if command =='aa':
+            self.enable_path=0
+        self.sendMessage(command.encode("UTF-8") )       
 
 
     def upload_odom_callback(self, robot_odom):
         # Get the motion command from the recognized phrase
        
-        siteX=int(robot_odom.pose.pose.position.x*100)
-        siteY=int(robot_odom.pose.pose.position.y*100)
-
-        print("the pose x is"+str(siteX))
-        print("the pose y is"+str(siteY))
-
+        siteX=(robot_odom.pose.pose.position.x+self.odom_shift)*self.odom_precision
+        siteY=(robot_odom.pose.pose.position.y+self.odom_shift)*self.odom_precision
+        siteX=int((siteX*self.pix_range)/self.max_range)
+        siteY=int((siteY*self.pix_range)/self.max_range)
 
         robot_site_x = str(siteX)
         robot_site_y = str(siteY)
-
-        self.sendMessage(('0'+','+robot_site_x+','+robot_site_y).encode("UTF-8") )
+        
+        print("the pose x is"+ robot_site_x)
+        print("the pose y is"+ robot_site_y)
+     
+        if self.enable_path>0:
+           self.sendMessage(('0'+','+robot_site_x+','+robot_site_y).encode("UTF-8") )
+        
+           
 
 
     def onClose(self, wasClean, code, reason):

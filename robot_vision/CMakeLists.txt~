@@ -253,3 +253,6 @@ add_executable(roi_stable_photo src/roi_stable_photo.cpp)
 target_link_libraries(roi_stable_photo ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
 add_dependencies(roi_stable_photo robot_vision_generate_messages_cpp)
 
+add_executable(get_path src/getpath.cpp)  
+target_link_libraries(get_path ${catkin_LIBRARIES} ${OpenCV_LIBS}) 
+add_dependencies(get_path robot_vision_generate_messages_cpp)
