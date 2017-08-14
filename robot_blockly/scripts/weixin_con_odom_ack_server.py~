@@ -110,8 +110,8 @@ class MyServerProtocol(WebSocketServerProtocol):
         print("WebSocket connection open.")
         rospy.Subscriber('/upload_to_weixin', String, self.upload_msg_callback)
 
-        #rospy.Subscriber('/mobile_base/mobile_base_controller/odom', Odometry, self.upload_odom_callback)
-        rospy.Subscriber('/odom', Odometry, self.upload_odom_callback)
+        rospy.Subscriber('/mobile_base/mobile_base_controller/odom', Odometry, self.upload_odom_callback)
+        #rospy.Subscriber('/odom', Odometry, self.upload_odom_callback)
         self.cmd_vel_pub = rospy.Publisher('/mobile_base/mobile_base_controller/cmd_vel', Twist, queue_size=5)
         self.cmd_con_pub = rospy.Publisher('Rog_result',                                 String, queue_size=1)
         robot_odom=Odometry()
