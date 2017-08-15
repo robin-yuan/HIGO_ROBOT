@@ -33,13 +33,17 @@ VERBOSE=True
 import copy
 
 mutex = Lock()
-topic_name = "/camera/rgb/image_color"
+topic_name = "/camera/image/image_raw/left"
 class web_video_server:
 
     def __init__(self):
         '''Initialize ros publisher, ros subscriber'''
         # subscribed Topic
         # Initialize a number of global variables
+        self.commands =            ['接收地图',
+                                    '拍照',
+                                    '保存'
+                                    ]
         self.frame = None
         self.frame_size = None
         self.frame_width = None
@@ -52,7 +56,7 @@ class web_video_server:
         self.takephotoFlag=0;
 
         self.subscriber = rospy.Subscriber(topic_name, Image, self.callback,  queue_size = 1)
-        self.subscriber1 = rospy.Subscriber('speak_string' , String , self.upload_choice_callback)
+        self.subscriber1 = rospy.Subscriber('/Rog_result' , String , self.upload_choice_callback)
         if VERBOSE :
             print "subscribed to " + topic_name
 
@@ -95,11 +99,12 @@ class web_video_server:
 
     def upload_choice_callback(self, ros_data):
          command = ros_data.data
-         if command=='下载地图':
-            self.takephotoFlag=1
-         elif command=='拍照':
-            self.takephotoFlag=2
-         print(command)
+         if (command in self.commands):
+            if command=='接收地图':
+               self.takephotoFlag=1
+            elif command=='拍照':
+               self.takephotoFlag=2
+            print(command)
 
 
     def convert_image(self,ros_image):
@@ -157,12 +162,12 @@ class MyHandler(BaseHTTPRequestHandler):
         enc="UTF-8" 
         self.send_response(200)           #发送200状态码，表示处理正常
         self.send_header("Content-type", "text/html; charset=%s" % enc)   #发送html头，这里可说明文件类型和字符集等信息
-        if self.takephotoFlag==1:
-           f= open("./map.jpg","r")       #只读打开一个文件
-           self.takephotoFlag=0
-        elif self.takephotoFlag==2:
-           f = open("./123.jpg","r")       #只读打开一个文件
-           self.takephotoFlag=0
+        #if self.takephotoFlag==1:
+        f= open("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_blockly/scripts/123.jpg","r")       #只读打开一个文件
+         #  self.takephotoFlag=0
+        #elif self.takephotoFlag==2:
+        #   f = open("./123.jpg","r")       #只读打开一个文件
+        #   self.takephotoFlag=0
         strs = f.read()                          #读出文件
         self.send_header("Content-Length", str(len(strs)))    #发送html头   说明文件长度 注意，这里如果长度和实际长度不一致的话，后面客户端处理时就会触发IncompleteRead 这个异常。
         self.end_headers()                #html头部分结束

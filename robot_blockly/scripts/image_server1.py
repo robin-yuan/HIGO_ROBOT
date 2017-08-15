@@ -33,7 +33,7 @@ VERBOSE=True
 import copy
 
 mutex = Lock()
-topic_name = "/camera/rgb/image_color"
+topic_name = "/camera/image/image_raw/left"
 class web_video_server:
 
     def __init__(self):
@@ -147,7 +147,7 @@ class MyHandler(BaseHTTPRequestHandler):
         enc="UTF-8" 
         self.send_response(200)           #发送200状态码，表示处理正常
         self.send_header("Content-type", "text/html; charset=%s" % enc)   #发送html头，这里可说明文件类型和字符集等信息
-        f = open("./123.jpg","r")       #只读打开一个文件
+        f = open("/home/ros/gohi_ws/src/HIGO_ROBOT/robot_blockly/scripts/123.jpg","r")       #只读打开一个文件
         strs = f.read()                          #读出文件
         self.send_header("Content-Length", str(len(strs)))    #发送html头   说明文件长度 注意，这里如果长度和实际长度不一致的话，后面客户端处理时就会触发IncompleteRead 这个异常。
         self.end_headers()                #html头部分结束

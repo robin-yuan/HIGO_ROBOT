@@ -105,7 +105,10 @@ class MyServerProtocol(WebSocketServerProtocol):
                                     '启动机械臂',
                                     '停止机械臂',
                                     '开始跟踪',
-                                    '停止跟踪'
+                                    '停止跟踪', 
+                                    '接收地图',
+                                    '拍照',
+                                    '保存'
                                     ]
         print("WebSocket connection open.")
         rospy.Subscriber('/upload_to_weixin', String, self.upload_msg_callback)
